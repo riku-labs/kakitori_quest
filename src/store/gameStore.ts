@@ -1,0 +1,143 @@
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+import type {
+  Screen,
+  WritingAreaPosition,
+  StrokeEndingResult,
+  BattlePhase,
+  SaveData,
+} from '../types/game'
+import { WORD_LIST, type WordEntry } from '../data/wordList'
+
+const MAX_HEARTS = 3
+
+interface GameStore extends SaveData {
+  // 画面状態
+  screen: Screen
+
+  // 現在のステージ
+  currentEntry: WordEntry | null
+  currentCharIndex: number
+  hearts: number
+  endingResults: StrokeEndingResult[]
+  battlePhase: BattlePhase
+  battleMessage: string
+
+  // アクション: 画面遷移
+  goToTitle: () => void
+  goToStageSelect: () => void
+  startStage: (entry: WordEntry) => void
+
+  // アクション: ゲームループ
+  onStrokeMistake: () => void
+  onCharComplete: (results: StrokeEndingResult[]) => void
+  onBattleWin: () => void
+  onBattleLose: () => void
+  setBattleMessage: (msg: string) => void
+
+  // アクション: 設定
+  setWritingAreaPosition: (pos: WritingAreaPosition) => void
+}
+
+export const useGameStore = create<GameStore>()(
+  persist(
+    (set, get) => ({
+      // 永続化対象の初期値
+      clearedWords: {},
+      writingAreaPosition: 'right',
+
+      // セッション状態の初期値
+      screen: 'title',
+      currentEntry: null,
+      currentCharIndex: 0,
+      hearts: MAX_HEARTS,
+      endingResults: [],
+      battlePhase: 'writing',
+      battleMessage: '',
+
+      goToTitle: () => set({ screen: 'title' }),
+
+      goToStageSelect: () => set({ screen: 'stageSelect' }),
+
+      startStage: (entry) =>
+        set({
+          screen: 'game',
+          currentEntry: entry,
+          currentCharIndex: 0,
+          hearts: MAX_HEARTS,
+          endingResults: [],
+          battlePhase: 'writing',
+          battleMessage: `${entry.word[0]}があらわれた！`,
+        }),
+
+      onStrokeMistake: () => {
+        const hearts = get().hearts - 1
+        if (hearts <= 0) {
+          // ハート0 → 単語の最初からリスタート
+          set({
+            hearts: MAX_HEARTS,
+            currentCharIndex: 0,
+            endingResults: [],
+            battlePhase: 'writing',
+            battleMessage: `やりなおし！${get().currentEntry!.word[0]}からはじめよう`,
+          })
+        } else {
+          set({ hearts, battleMessage: 'まちがえた！' })
+        }
+      },
+
+      onCharComplete: (results) => {
+        set((state) => ({
+          endingResults: [...state.endingResults, ...results],
+          battlePhase: 'battling',
+          battleMessage: 'バトル！',
+        }))
+      },
+
+      onBattleWin: () => {
+        const { currentEntry, currentCharIndex } = get()
+        if (!currentEntry) return
+        const nextIndex = currentCharIndex + 1
+
+        if (nextIndex >= currentEntry.word.length) {
+          // 全文字クリア → ステージクリア
+          set({ screen: 'stageComplete', battlePhase: 'won' })
+        } else {
+          // 次の文字へ
+          set({
+            currentCharIndex: nextIndex,
+            battlePhase: 'writing',
+            battleMessage: `${currentEntry.word[nextIndex]}があらわれた！`,
+          })
+        }
+      },
+
+      onBattleLose: () => {
+        const hearts = get().hearts - 1
+        if (hearts <= 0) {
+          set({ screen: 'gameOver', battlePhase: 'lost' })
+        } else {
+          set({
+            hearts,
+            battlePhase: 'writing',
+            battleMessage: 'まけた…もういちど！',
+          })
+        }
+      },
+
+      setBattleMessage: (msg) => set({ battleMessage: msg }),
+
+      setWritingAreaPosition: (pos) => set({ writingAreaPosition: pos }),
+    }),
+    {
+      name: 'kakitori-quest-save-v1',
+      partialize: (state) => ({
+        clearedWords: state.clearedWords,
+        writingAreaPosition: state.writingAreaPosition,
+      }),
+    },
+  ),
+)
+
+// 単語リストのゲッター（store 外で使う）
+export { WORD_LIST }
