@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { resolveBattle, BATTLE_WIN_THRESHOLD } from '../../logic/battleLogic'
+import { resolveBattle } from '../../logic/battleLogic'
 import type { StrokeEndingResult } from '../../types/game'
 
 const makeResult = (isCorrect: boolean): StrokeEndingResult => ({
