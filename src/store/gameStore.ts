@@ -26,6 +26,7 @@ interface GameStore extends SaveData {
   // アクション: 画面遷移
   goToTitle: () => void
   goToStageSelect: () => void
+  goToSettings: () => void
   startStage: (entry: WordEntry) => void
 
   // アクション: ゲームループ
@@ -58,6 +59,8 @@ export const useGameStore = create<GameStore>()(
       goToTitle: () => set({ screen: 'title' }),
 
       goToStageSelect: () => set({ screen: 'stageSelect' }),
+
+      goToSettings: () => set({ screen: 'settings' }),
 
       startStage: (entry) =>
         set({
