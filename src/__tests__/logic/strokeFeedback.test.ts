@@ -49,4 +49,30 @@ describe('buildStrokeFeedback', () => {
     const results = [makeResult(0, false, null), makeResult(1, false, 'tome')]
     expect(buildStrokeFeedback(results)).toBe('2かくめ：とめになっています')
   })
+
+  it('expectedEndings がある場合は「ではなく〇〇にしましょう」形式を返す', () => {
+    const results = [makeResult(0, false, 'harai', ['tome'])]
+    expect(buildStrokeFeedback(results)).toBe('1かくめ：はらいではなくとめにしましょう')
+  })
+
+  it('expectedEndings が複数ある場合は最初の1つを使う', () => {
+    const results = [makeResult(0, false, 'hane', ['tome', 'harai'])]
+    expect(buildStrokeFeedback(results)).toBe('1かくめ：はねではなくとめにしましょう')
+  })
+
+  it('expectedEndings が空の場合は「になっています」フォールバックを返す', () => {
+    const results = [makeResult(0, false, 'tome', [])]
+    expect(buildStrokeFeedback(results)).toBe('1かくめ：とめになっています')
+  })
+
+  it('複数不正解で expectedEndings あり・なし混在を処理する', () => {
+    const results = [
+      makeResult(0, false, 'harai', ['tome']),
+      makeResult(1, true, 'tome'),
+      makeResult(2, false, 'hane', []),
+    ]
+    expect(buildStrokeFeedback(results)).toBe(
+      '1かくめ：はらいではなくとめにしましょう\n3かくめ：はねになっています',
+    )
+  })
 })
