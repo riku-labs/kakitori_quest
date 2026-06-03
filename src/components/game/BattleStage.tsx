@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { resolveBattle } from '../../logic/battleLogic'
 import { calculateAccuracy } from '../../logic/accuracyLogic'
+import { buildStrokeFeedback } from '../../logic/strokeFeedback'
 import { EnemyDisplay } from './EnemyDisplay'
 import { CharacterDisplay } from './CharacterDisplay'
 import { MessageWindow } from './MessageWindow'
@@ -21,6 +22,7 @@ export function BattleStage() {
 
   const char = currentEntry?.word[currentCharIndex] ?? ''
   const accuracy = calculateAccuracy(endingResults)
+  const strokeFeedback = buildStrokeFeedback(endingResults)
 
   useEffect(() => {
     if (battlePhase !== 'battling') return
@@ -85,7 +87,10 @@ export function BattleStage() {
         </motion.div>
       </div>
 
-      <MessageWindow message={battleMessage} />
+      <MessageWindow
+        message={battleMessage}
+        detail={battlePhase === 'lost' || battlePhase === 'battling' ? strokeFeedback ?? undefined : undefined}
+      />
     </div>
   )
 }
