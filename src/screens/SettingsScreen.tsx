@@ -3,8 +3,9 @@ import { useGameStore } from '../store/gameStore'
 import type { WritingAreaPosition } from '../types/game'
 
 const POSITIONS: { value: WritingAreaPosition; label: string }[] = [
-  { value: 'right', label: 'みぎ' },
-  { value: 'left',  label: 'ひだり' },
+  { value: 'auto',   label: 'じどう（おすすめ）' },
+  { value: 'right',  label: 'みぎ' },
+  { value: 'left',   label: 'ひだり' },
   { value: 'bottom', label: 'した' },
 ]
 
