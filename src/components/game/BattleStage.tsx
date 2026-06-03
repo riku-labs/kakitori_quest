@@ -15,9 +15,8 @@ export function BattleStage() {
     battlePhase,
     endingResults,
     battleMessage,
-    setBattleMessage,
-    onBattleWin,
-    onBattleLose,
+    setBattleFeedback,
+    confirmBattle,
   } = useGameStore()
 
   const char = currentEntry?.word[currentCharIndex] ?? ''
@@ -30,16 +29,14 @@ export function BattleStage() {
     const result = resolveBattle(endingResults)
     const timer = setTimeout(() => {
       if (result === 'win') {
-        setBattleMessage(`${char}は かちのこった！`)
-        setTimeout(onBattleWin, 800)
+        setBattleFeedback('win', `${char}は かちのこった！`)
       } else {
-        setBattleMessage(`まがった「${char}」の かちだ…`)
-        setTimeout(onBattleLose, 800)
+        setBattleFeedback('lose', `まがった「${char}」の かちだ…`)
       }
     }, 1500)
 
     return () => clearTimeout(timer)
-  }, [battlePhase, char, endingResults, onBattleWin, onBattleLose, setBattleMessage])
+  }, [battlePhase, char, endingResults, setBattleFeedback])
 
   return (
     <div
@@ -82,15 +79,33 @@ export function BattleStage() {
           <CharacterDisplay
             char={char}
             accuracy={accuracy}
-            visible={battlePhase === 'battling' || battlePhase === 'won'}
+            visible={battlePhase === 'battling' || battlePhase === 'won' || battlePhase === 'feedback'}
           />
         </motion.div>
       </div>
 
       <MessageWindow
         message={battleMessage}
-        detail={battlePhase === 'lost' || battlePhase === 'battling' ? strokeFeedback ?? undefined : undefined}
+        detail={(battlePhase === 'battling' || battlePhase === 'feedback') ? strokeFeedback ?? undefined : undefined}
       />
+
+      {battlePhase === 'feedback' && (
+        <button
+          onClick={confirmBattle}
+          style={{
+            background: 'transparent',
+            border: '2px solid var(--color-window-border)',
+            color: 'var(--color-text)',
+            fontFamily: 'inherit',
+            fontSize: '0.9em',
+            padding: '8px 16px',
+            cursor: 'pointer',
+            width: '100%',
+          }}
+        >
+          ▼ タップして続ける
+        </button>
+      )}
     </div>
   )
 }
