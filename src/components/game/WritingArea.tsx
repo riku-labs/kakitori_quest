@@ -40,17 +40,23 @@ export function WritingArea({
     strokeIndexRef.current = 0
     setHasStarted(false)
 
+    let cancelled = false
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let charInstance: any = null
 
     const init = async () => {
       const { char: kakitoriChar } = await import('@k1low/kakitori')
 
+      // StrictMode の二重 effect によるレース: cleanup が先に走ると
+      // charInstance は null のままなので unmount されない。
+      // cancelled フラグで非同期完了後の mount を防ぐ。
+      if (cancelled || !hostRef.current) return
+
       charInstance = kakitoriChar.create(char)
-      const rect = hostRef.current!.getBoundingClientRect()
+      const rect = hostRef.current.getBoundingClientRect()
       const size = Math.min(rect.width, rect.height)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      charInstance.mount(hostRef.current!, {
+      charInstance.mount(hostRef.current, {
         size: size > 0 ? size : undefined,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         onCorrectStroke: (data: any) => {
@@ -80,6 +86,7 @@ export function WritingArea({
     init()
 
     return () => {
+      cancelled = true
       charInstance?.unmount?.()
     }
   }, [char, onMistake, handleComplete])
