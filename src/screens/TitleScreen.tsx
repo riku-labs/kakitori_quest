@@ -2,7 +2,8 @@ import { DQWindow } from '../components/ui/DQWindow'
 import { useGameStore } from '../store/gameStore'
 
 export function TitleScreen() {
-  const { goToStageSelect, goToSettings } = useGameStore((s) => ({ goToStageSelect: s.goToStageSelect, goToSettings: s.goToSettings }))
+  const goToStageSelect = useGameStore((s) => s.goToStageSelect)
+  const goToSettings = useGameStore((s) => s.goToSettings)
 
   return (
     <div
