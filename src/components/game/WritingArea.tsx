@@ -47,8 +47,11 @@ export function WritingArea({
       const { char: kakitoriChar } = await import('@k1low/kakitori')
 
       charInstance = kakitoriChar.create(char)
+      const rect = hostRef.current!.getBoundingClientRect()
+      const size = Math.min(rect.width, rect.height)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       charInstance.mount(hostRef.current!, {
+        size: size > 0 ? size : undefined,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         onCorrectStroke: (data: any) => {
           setHasStarted(true)
@@ -109,7 +112,8 @@ export function WritingArea({
           flex: 1,
           position: 'relative',
           border: '2px solid transparent',
-          transition: 'border-color 0.3s',
+          transition: 'border-color 0.3s, opacity 0.5s',
+          opacity: hasStarted ? 1 : 0.2,
         }}
       />
       {!hasStarted && (
