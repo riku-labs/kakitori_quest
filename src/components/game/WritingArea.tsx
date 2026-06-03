@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useState } from 'react'
 import type { StrokeEndingResult, EndingType } from '../../types/game'
 import { HeartDisplay } from '../ui/HeartDisplay'
 
@@ -27,6 +27,7 @@ export function WritingArea({
   const hostRef = useRef<HTMLDivElement>(null)
   const strokeResultsRef = useRef<StrokeEndingResult[]>([])
   const strokeIndexRef = useRef(0)
+  const [hasStarted, setHasStarted] = useState(false)
 
   const handleComplete = useCallback(() => {
     onComplete(strokeResultsRef.current)
@@ -37,6 +38,7 @@ export function WritingArea({
 
     strokeResultsRef.current = []
     strokeIndexRef.current = 0
+    setHasStarted(false)
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let charInstance: any = null
@@ -49,6 +51,7 @@ export function WritingArea({
       charInstance.mount(hostRef.current!, {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         onCorrectStroke: (data: any) => {
+          setHasStarted(true)
           const result: StrokeEndingResult = {
             strokeIndex: strokeIndexRef.current++,
             detectedEnding: inferEndingType(data?.strokeEnding?.velocityProfile),
@@ -57,6 +60,7 @@ export function WritingArea({
           strokeResultsRef.current.push(result)
         },
         onMistake: () => {
+          setHasStarted(true)
           onMistake()
         },
         onComplete: () => {
@@ -79,6 +83,7 @@ export function WritingArea({
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
+        position: 'relative',
         border: '3px solid var(--color-window-border)',
         background: '#000',
       }}
@@ -95,8 +100,31 @@ export function WritingArea({
       </div>
       <div
         ref={hostRef}
-        style={{ flex: 1, position: 'relative' }}
+        className={hasStarted ? undefined : 'writing-pulse'}
+        style={{
+          flex: 1,
+          position: 'relative',
+          border: '2px solid transparent',
+          transition: 'border-color 0.3s',
+        }}
       />
+      {!hasStarted && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '60px',
+            left: 0,
+            right: 0,
+            textAlign: 'center',
+            color: 'var(--color-accent)',
+            fontSize: '0.75em',
+            pointerEvents: 'none',
+            opacity: 0.8,
+          }}
+        >
+          ✏ なぞってかけ！
+        </div>
+      )}
       <div
         style={{
           padding: '6px 8px',
