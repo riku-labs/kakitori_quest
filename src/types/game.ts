@@ -33,6 +33,8 @@ export interface StrokeEndingResult {
   detectedEnding: EndingType | null
   // kakitori StrokeEndingResult.correct: boolean をそのまま格納
   isCorrect: boolean
+  // kakitori の strokeEnding.expected からマッピング
+  expectedEndings: EndingType[]
 }
 
 // 崩れ文字スタイル（将来の拡張用差し込み口）

@@ -1,12 +1,13 @@
 import { describe, it, expect } from 'vitest'
 import { buildStrokeFeedback } from '../../logic/strokeFeedback'
-import type { StrokeEndingResult } from '../../types/game'
+import type { StrokeEndingResult, EndingType } from '../../types/game'
 
 const makeResult = (
   strokeIndex: number,
   isCorrect: boolean,
   detectedEnding: StrokeEndingResult['detectedEnding'] = null,
-): StrokeEndingResult => ({ strokeIndex, isCorrect, detectedEnding })
+  expectedEndings: EndingType[] = [],
+): StrokeEndingResult => ({ strokeIndex, isCorrect, detectedEnding, expectedEndings })
 
 describe('buildStrokeFeedback', () => {
   it('全画正解なら null を返す', () => {
