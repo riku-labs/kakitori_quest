@@ -6,6 +6,7 @@ const makeResult = (strokeIndex: number, isCorrect: boolean): StrokeEndingResult
   strokeIndex,
   detectedEnding: null,
   isCorrect,
+  expectedEndings: [],
 })
 
 describe('calculateAccuracy', () => {

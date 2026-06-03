@@ -6,6 +6,7 @@ const makeResult = (isCorrect: boolean): StrokeEndingResult => ({
   strokeIndex: 0,
   detectedEnding: null,
   isCorrect,
+  expectedEndings: [],
 })
 
 describe('resolveBattle', () => {
