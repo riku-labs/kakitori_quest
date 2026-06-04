@@ -67,7 +67,7 @@ export function GameScreen() {
 
   if (effectiveLayout === 'bottom') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
         {battlePanel}
         {writingPanel}
       </div>
@@ -75,7 +75,7 @@ export function GameScreen() {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100vh' }}>
+    <div style={{ display: 'flex', height: '100dvh' }}>
       {effectiveLayout === 'left' ? (
         <>
           {writingPanel}

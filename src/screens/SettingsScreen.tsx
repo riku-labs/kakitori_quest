@@ -24,7 +24,7 @@ export function SettingsScreen() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        height: '100vh',
+        height: '100dvh',
         background: '#000',
       }}
     >
