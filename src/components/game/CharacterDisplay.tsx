@@ -20,9 +20,16 @@ export function CharacterDisplay({ char, accuracy, visible }: CharacterDisplayPr
     if (!hostRef.current) return
     const el = hostRef.current
     el.innerHTML = ''
+    let cancelled = false
     import('@k1low/kakitori').then(({ char: kakitoriChar }) => {
+      if (cancelled) return
+      el.innerHTML = ''
       kakitoriChar.render(el, char, { size: 80, strokeColor: color })
     })
+    return () => {
+      cancelled = true
+      el.innerHTML = ''
+    }
   }, [char, color])
 
   return (
