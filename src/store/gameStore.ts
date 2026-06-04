@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 import type {
   Screen,
   WritingAreaPosition,
+  CharSize,
   StrokeEndingResult,
   BattlePhase,
   SaveData,
@@ -41,6 +42,7 @@ interface GameStore extends SaveData {
 
   // アクション: 設定
   setWritingAreaPosition: (pos: WritingAreaPosition) => void
+  setCharSize: (size: CharSize) => void
 }
 
 export const useGameStore = create<GameStore>()(
@@ -49,6 +51,7 @@ export const useGameStore = create<GameStore>()(
       // 永続化対象の初期値
       clearedWords: {},
       writingAreaPosition: 'auto',
+      charSize: 'medium',
 
       // セッション状態の初期値
       screen: 'title',
@@ -144,12 +147,15 @@ export const useGameStore = create<GameStore>()(
       },
 
       setWritingAreaPosition: (pos) => set({ writingAreaPosition: pos }),
+
+      setCharSize: (size) => set({ charSize: size }),
     }),
     {
       name: 'kakitori-quest-save-v1',
       partialize: (state) => ({
         clearedWords: state.clearedWords,
         writingAreaPosition: state.writingAreaPosition,
+        charSize: state.charSize,
       }),
     },
   ),

@@ -6,6 +6,7 @@ interface WritingAreaProps {
   char: string
   hearts: number
   maxHearts: number
+  maxSize: number
   onMistake: () => void
   onComplete: (results: StrokeEndingResult[]) => void
 }
@@ -21,6 +22,7 @@ export function WritingArea({
   char,
   hearts,
   maxHearts,
+  maxSize,
   onMistake,
   onComplete,
 }: WritingAreaProps) {
@@ -55,8 +57,7 @@ export function WritingArea({
       charInstance = kakitoriChar.create(char)
       const rect = hostRef.current.getBoundingClientRect()
       const containerSize = Math.min(rect.width, rect.height)
-      // 2.5cm × 2.5cm を想定（1cm = 96/2.54px）。コンテナが小さければ収める。
-      const size = Math.min(containerSize, Math.round(2.5 * (96 / 2.54)))
+      const size = Math.min(containerSize, maxSize)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       charInstance.mount(hostRef.current, {
         size: size > 0 ? size : undefined,
@@ -91,7 +92,7 @@ export function WritingArea({
       cancelled = true
       charInstance?.unmount?.()
     }
-  }, [char, onMistake, handleComplete])
+  }, [char, maxSize, onMistake, handleComplete])
 
   return (
     <div

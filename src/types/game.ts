@@ -10,6 +10,10 @@ export type Screen =
 // 書き取りエリアの位置
 export type WritingAreaPosition = 'auto' | 'right' | 'left' | 'bottom'
 
+// 文字サイズ
+export type CharSize = 'small' | 'medium' | 'large'
+export const CHAR_SIZE_PX: Record<CharSize, number> = { small: 100, medium: 200, large: 300 }
+
 // とめ/はね/はらい の種別
 export type EndingType = 'tome' | 'hane' | 'harai'
 
@@ -58,6 +62,7 @@ export interface StageProgress {
 export interface SaveData {
   clearedWords: Record<string, number>  // word -> best star count (1-3)
   writingAreaPosition: WritingAreaPosition
+  charSize: CharSize
 }
 
 // バトルフェーズの状態

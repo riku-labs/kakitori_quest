@@ -1,5 +1,6 @@
 import { useCallback, useLayoutEffect, useState } from 'react'
 import type { StrokeEndingResult } from '../../types/game'
+import { CHAR_SIZE_PX } from '../../types/game'
 import { useGameStore } from '../../store/gameStore'
 import { getEffectiveLayout } from '../../logic/layoutLogic'
 import { BattleStage } from './BattleStage'
@@ -12,6 +13,7 @@ export function GameScreen() {
     hearts,
     battlePhase,
     writingAreaPosition,
+    charSize,
     onStrokeMistake,
     onCharComplete,
   } = useGameStore()
@@ -50,6 +52,7 @@ export function GameScreen() {
         char={char}
         hearts={hearts}
         maxHearts={3}
+        maxSize={CHAR_SIZE_PX[charSize]}
         onMistake={onStrokeMistake}
         onComplete={handleComplete}
       />
