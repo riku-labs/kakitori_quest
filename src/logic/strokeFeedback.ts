@@ -7,7 +7,12 @@ const ENDING_JA: Record<EndingType, string> = {
 }
 
 export function buildStrokeFeedback(results: StrokeEndingResult[]): string | null {
-  const wrongs = results.filter((r) => !r.isCorrect && r.detectedEnding !== null)
+  const wrongs = results.filter(
+    (r) =>
+      !r.isCorrect &&
+      r.detectedEnding !== null &&
+      !r.expectedEndings.includes(r.detectedEnding),
+  )
   if (wrongs.length === 0) return null
   return wrongs
     .map((r) => {

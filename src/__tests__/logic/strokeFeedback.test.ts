@@ -75,4 +75,17 @@ describe('buildStrokeFeedback', () => {
       '1かくめ：はらいではなくとめにしましょう\n3かくめ：はねになっています',
     )
   })
+
+  it('detectedEnding が expectedEndings に含まれる場合はスキップする（X ではなく X は表示しない）', () => {
+    const results = [makeResult(0, false, 'hane', ['hane'])]
+    expect(buildStrokeFeedback(results)).toBeNull()
+  })
+
+  it('detectedEnding が expectedEndings の一部に含まれる場合のみスキップする', () => {
+    const results = [
+      makeResult(0, false, 'hane', ['hane', 'tome']),
+      makeResult(1, false, 'harai', ['hane', 'tome']),
+    ]
+    expect(buildStrokeFeedback(results)).toBe('2かくめ：はらいではなくはねにしましょう')
+  })
 })

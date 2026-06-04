@@ -1,3 +1,5 @@
+import { useEffect, useRef } from 'react'
+
 interface CharacterDisplayProps {
   char: string
   accuracy: number
@@ -5,6 +7,7 @@ interface CharacterDisplayProps {
 }
 
 export function CharacterDisplay({ char, accuracy, visible }: CharacterDisplayProps) {
+  const hostRef = useRef<HTMLDivElement>(null)
   const strength = Math.round(accuracy * 100)
   const color =
     accuracy >= 0.9
@@ -13,19 +16,25 @@ export function CharacterDisplay({ char, accuracy, visible }: CharacterDisplayPr
         ? '#ffd700'
         : '#ff8844'
 
+  useEffect(() => {
+    if (!hostRef.current) return
+    const el = hostRef.current
+    el.innerHTML = ''
+    import('@k1low/kakitori').then(({ char: kakitoriChar }) => {
+      kakitoriChar.render(el, char, { size: 80, strokeColor: color })
+    })
+  }, [char, color])
+
   return (
     <div style={{ textAlign: 'center', opacity: visible ? 1 : 0.2 }}>
       <div
+        ref={hostRef}
         style={{
-          fontSize: '4em',
-          fontFamily: 'serif',
+          display: 'inline-block',
           lineHeight: 1,
-          color,
-          textShadow: `0 0 12px ${color}`,
+          filter: `drop-shadow(0 0 8px ${color})`,
         }}
-      >
-        {char}
-      </div>
+      />
       {visible && (
         <div style={{ color, fontSize: '0.65em', marginTop: '4px' }}>
           ちから {strength}%
