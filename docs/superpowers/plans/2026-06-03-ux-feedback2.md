@@ -64,7 +64,7 @@ import type { StrokeEndingResult, EndingType } from '../../types/game'
 - [ ] **Step 3: テストがまだパスすることを確認**
 
 ```bash
-cd /Users/hiranyu1/repo/kakitori_quest/.claude/worktrees/feature+phase1
+cd <repo-root>/.claude/worktrees/feature+phase1
 npm test
 ```
 
@@ -73,7 +73,7 @@ npm test
 - [ ] **Step 4: コミット**
 
 ```bash
-cd /Users/hiranyu1/repo/kakitori_quest/.claude/worktrees/feature+phase1
+cd <repo-root>/.claude/worktrees/feature+phase1
 git add src/types/game.ts src/__tests__/logic/strokeFeedback.test.ts
 git commit -m "feat: add expectedEndings to StrokeEndingResult type"
 ```
@@ -121,7 +121,7 @@ git commit -m "feat: add expectedEndings to StrokeEndingResult type"
 - [ ] **Step 2: テストが失敗することを確認**
 
 ```bash
-cd /Users/hiranyu1/repo/kakitori_quest/.claude/worktrees/feature+phase1
+cd <repo-root>/.claude/worktrees/feature+phase1
 npm test -- --reporter=verbose 2>&1 | grep -E "FAIL|✓|✗|×"
 ```
 
@@ -159,7 +159,7 @@ export function buildStrokeFeedback(results: StrokeEndingResult[]): string | nul
 - [ ] **Step 4: 全テストがパスすることを確認**
 
 ```bash
-cd /Users/hiranyu1/repo/kakitori_quest/.claude/worktrees/feature+phase1
+cd <repo-root>/.claude/worktrees/feature+phase1
 npm test
 ```
 
@@ -168,7 +168,7 @@ npm test
 - [ ] **Step 5: コミット**
 
 ```bash
-cd /Users/hiranyu1/repo/kakitori_quest/.claude/worktrees/feature+phase1
+cd <repo-root>/.claude/worktrees/feature+phase1
 git add src/__tests__/logic/strokeFeedback.test.ts src/logic/strokeFeedback.ts
 git commit -m "feat: show correct stroke ending in feedback message"
 ```
@@ -203,7 +203,7 @@ onCorrectStroke: (data: any) => {
 - [ ] **Step 2: TypeScript エラーがないことを確認**
 
 ```bash
-cd /Users/hiranyu1/repo/kakitori_quest/.claude/worktrees/feature+phase1
+cd <repo-root>/.claude/worktrees/feature+phase1
 npx tsc --noEmit
 ```
 
@@ -212,7 +212,7 @@ npx tsc --noEmit
 - [ ] **Step 3: テストがパスすることを確認**
 
 ```bash
-cd /Users/hiranyu1/repo/kakitori_quest/.claude/worktrees/feature+phase1
+cd <repo-root>/.claude/worktrees/feature+phase1
 npm test
 ```
 
@@ -221,7 +221,7 @@ npm test
 - [ ] **Step 4: コミット**
 
 ```bash
-cd /Users/hiranyu1/repo/kakitori_quest/.claude/worktrees/feature+phase1
+cd <repo-root>/.claude/worktrees/feature+phase1
 git add src/components/game/WritingArea.tsx
 git commit -m "feat: capture expectedEndings from kakitori strokeEnding data"
 ```
@@ -296,7 +296,7 @@ const init = async () => {
 - [ ] **Step 2: TypeScript エラーがないことを確認**
 
 ```bash
-cd /Users/hiranyu1/repo/kakitori_quest/.claude/worktrees/feature+phase1
+cd <repo-root>/.claude/worktrees/feature+phase1
 npx tsc --noEmit
 ```
 
@@ -305,7 +305,7 @@ npx tsc --noEmit
 - [ ] **Step 3: テストがパスすることを確認**
 
 ```bash
-cd /Users/hiranyu1/repo/kakitori_quest/.claude/worktrees/feature+phase1
+cd <repo-root>/.claude/worktrees/feature+phase1
 npm test
 ```
 
@@ -314,7 +314,7 @@ npm test
 - [ ] **Step 4: コミット**
 
 ```bash
-cd /Users/hiranyu1/repo/kakitori_quest/.claude/worktrees/feature+phase1
+cd <repo-root>/.claude/worktrees/feature+phase1
 git add src/components/game/WritingArea.tsx
 git commit -m "feat: fix kakitori size to container short-edge and add dim-before-writing effect"
 ```
@@ -371,7 +371,7 @@ confirmBattle: () => {
 - [ ] **Step 3: TypeScript エラーがないことを確認**
 
 ```bash
-cd /Users/hiranyu1/repo/kakitori_quest/.claude/worktrees/feature+phase1
+cd <repo-root>/.claude/worktrees/feature+phase1
 npx tsc --noEmit
 ```
 
@@ -380,7 +380,7 @@ npx tsc --noEmit
 - [ ] **Step 4: テストがパスすることを確認**
 
 ```bash
-cd /Users/hiranyu1/repo/kakitori_quest/.claude/worktrees/feature+phase1
+cd <repo-root>/.claude/worktrees/feature+phase1
 npm test
 ```
 
@@ -389,7 +389,7 @@ npm test
 - [ ] **Step 5: コミット**
 
 ```bash
-cd /Users/hiranyu1/repo/kakitori_quest/.claude/worktrees/feature+phase1
+cd <repo-root>/.claude/worktrees/feature+phase1
 git add src/types/game.ts src/store/gameStore.ts
 git commit -m "feat: add feedback BattlePhase and confirmBattle action to gameStore"
 ```
@@ -522,7 +522,7 @@ export function BattleStage() {
 - [ ] **Step 2: TypeScript エラーがないことを確認**
 
 ```bash
-cd /Users/hiranyu1/repo/kakitori_quest/.claude/worktrees/feature+phase1
+cd <repo-root>/.claude/worktrees/feature+phase1
 npx tsc --noEmit
 ```
 
@@ -531,7 +531,7 @@ npx tsc --noEmit
 - [ ] **Step 3: テストがパスすることを確認**
 
 ```bash
-cd /Users/hiranyu1/repo/kakitori_quest/.claude/worktrees/feature+phase1
+cd <repo-root>/.claude/worktrees/feature+phase1
 npm test
 ```
 
@@ -540,7 +540,7 @@ npm test
 - [ ] **Step 4: コミット**
 
 ```bash
-cd /Users/hiranyu1/repo/kakitori_quest/.claude/worktrees/feature+phase1
+cd <repo-root>/.claude/worktrees/feature+phase1
 git add src/components/game/BattleStage.tsx
 git commit -m "feat: add feedback phase with tap-to-continue to BattleStage"
 ```
@@ -552,7 +552,7 @@ git commit -m "feat: add feedback phase with tap-to-continue to BattleStage"
 全タスク完了後：
 
 ```bash
-cd /Users/hiranyu1/repo/kakitori_quest/.claude/worktrees/feature+phase1
+cd <repo-root>/.claude/worktrees/feature+phase1
 npm test && npx tsc --noEmit
 ```
 
@@ -560,5 +560,5 @@ npm test && npx tsc --noEmit
 - `Tests 27 passed (27)`
 - TypeScript エラーなし
 
-worktree パス: `/Users/hiranyu1/repo/kakitori_quest/.claude/worktrees/feature+phase1`
+worktree パス: `<repo-root>/.claude/worktrees/feature+phase1`
 ブランチ: `worktree-feature+phase1`
