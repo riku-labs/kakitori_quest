@@ -54,7 +54,9 @@ export function WritingArea({
 
       charInstance = kakitoriChar.create(char)
       const rect = hostRef.current.getBoundingClientRect()
-      const size = Math.min(rect.width, rect.height)
+      const containerSize = Math.min(rect.width, rect.height)
+      // 2.5cm × 2.5cm を想定（1cm = 96/2.54px）。コンテナが小さければ収める。
+      const size = Math.min(containerSize, Math.round(2.5 * (96 / 2.54)))
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       charInstance.mount(hostRef.current, {
         size: size > 0 ? size : undefined,
