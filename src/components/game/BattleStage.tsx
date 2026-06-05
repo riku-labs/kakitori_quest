@@ -1,10 +1,9 @@
 import { useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { resolveBattle } from '../../logic/battleLogic'
-import { calculateAccuracy } from '../../logic/accuracyLogic'
 import { buildStrokeFeedback } from '../../logic/strokeFeedback'
 import { EnemyDisplay } from './EnemyDisplay'
-import { CharacterDisplay } from './CharacterDisplay'
+import { HeroDisplay } from './HeroDisplay'
 import { MessageWindow } from './MessageWindow'
 import { useGameStore } from '../../store/gameStore'
 
@@ -23,7 +22,6 @@ export function BattleStage() {
 
   const char = currentEntry?.word[currentCharIndex] ?? ''
   const word = currentEntry?.word ?? ''
-  const accuracy = calculateAccuracy(endingResults)
   const strokeFeedback = buildStrokeFeedback(endingResults)
 
   // 敵HP: battling/feedback/won フェーズ中は「この文字クリア後」の値を先取りして表示
@@ -107,19 +105,7 @@ export function BattleStage() {
 
         <div style={{ color: '#555', fontSize: '0.8em' }}>VS</div>
 
-        <motion.div
-          animate={
-            battlePhase === 'battling'
-              ? { x: [-4, 4, -4, 0], transition: { duration: 0.4 } }
-              : {}
-          }
-        >
-          <CharacterDisplay
-            char={char}
-            accuracy={accuracy}
-            visible={battlePhase === 'battling' || battlePhase === 'won' || battlePhase === 'feedback'}
-          />
-        </motion.div>
+        <HeroDisplay />
       </div>
 
       <MessageWindow
