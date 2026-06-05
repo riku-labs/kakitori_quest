@@ -20,8 +20,14 @@ export function BattleStage() {
   } = useGameStore()
 
   const char = currentEntry?.word[currentCharIndex] ?? ''
+  const word = currentEntry?.word ?? ''
   const accuracy = calculateAccuracy(endingResults)
   const strokeFeedback = buildStrokeFeedback(endingResults)
+
+  // 敵HP: battling/feedback/won フェーズ中は「この文字クリア後」の値を先取りして表示
+  const isResolved = battlePhase === 'battling' || battlePhase === 'feedback' || battlePhase === 'won'
+  const effectiveCleared = isResolved ? currentCharIndex + 1 : currentCharIndex
+  const enemyHpRatio = word.length === 0 ? 1 : Math.max(0, (word.length - effectiveCleared) / word.length)
 
   useEffect(() => {
     if (battlePhase !== 'battling') return
@@ -49,6 +55,33 @@ export function BattleStage() {
         gap: '12px',
       }}
     >
+      {/* 敵HPバー */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <span style={{ color: 'var(--color-enemy)', fontSize: '0.65em', whiteSpace: 'nowrap' }}>
+          まがった「{word}」
+        </span>
+        <div
+          style={{
+            flex: 1,
+            height: '8px',
+            background: '#2a0000',
+            borderRadius: '4px',
+            overflow: 'hidden',
+            border: '1px solid #550000',
+          }}
+        >
+          <div
+            style={{
+              height: '100%',
+              width: `${(enemyHpRatio * 100).toFixed(1)}%`,
+              background: enemyHpRatio > 0.5 ? '#cc2200' : enemyHpRatio > 0.25 ? '#ff6600' : '#ffcc00',
+              borderRadius: '4px',
+              transition: 'width 0.6s ease-out, background 0.6s',
+            }}
+          />
+        </div>
+      </div>
+
       <div
         style={{
           flex: 1,
@@ -59,7 +92,7 @@ export function BattleStage() {
       >
         <AnimatePresence>
           <motion.div
-            key={`enemy-${char}`}
+            key="enemy-creature"
             initial={{ x: 40, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
           >
@@ -86,7 +119,11 @@ export function BattleStage() {
 
       <MessageWindow
         message={battleMessage}
-        detail={(battlePhase === 'battling' || battlePhase === 'feedback') ? strokeFeedback ?? undefined : undefined}
+        detail={
+          battlePhase === 'battling' || battlePhase === 'feedback'
+            ? strokeFeedback ?? undefined
+            : undefined
+        }
       />
 
       {battlePhase === 'feedback' && (
