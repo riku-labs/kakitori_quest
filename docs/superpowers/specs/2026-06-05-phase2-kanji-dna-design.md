@@ -81,10 +81,11 @@ export interface KanjiDNA {
 ### 種族決定
 
 ```typescript
-const species = (dna.strokeCount + Math.round(dna.hRatio * 10)) % 5
+const wordHash = word.split('').reduce((sum, c) => sum + c.charCodeAt(0), 0)
+const species = (dna.strokeCount + Math.round(dna.hRatio * 10) + wordHash) % 5
 ```
 
-画数が同じでも横率の差で別種族になる（例：山3画・横率0.12 → 種族4、川3画・横率0.04 → 種族3）。
+DNAだけでなく単語のcharCodeハッシュを加えることで、構造的に類似した漢字・熟語の組み合わせ（例：「三」と「一二」はどちらも横画3本でDNAがほぼ同じ）でも別種族に振り分けられる。同じ単語からは常に同じ種族が生成される一貫性は保たれる。
 
 ### 5種族の定義
 
