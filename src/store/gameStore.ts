@@ -28,9 +28,11 @@ interface GameStore extends SaveData {
   // クリーチャー
   stageCounter: number
   creatureSvg: string | null
+  creatureName: string | null
 
   // アクション: クリーチャー
   setCreatureSvg: (svg: string) => void
+  setCreatureName: (name: string) => void
 
   // アクション: 画面遷移
   goToTitle: () => void
@@ -71,6 +73,7 @@ export const useGameStore = create<GameStore>()(
       battleResult: null,
       stageCounter: 0,
       creatureSvg: null,
+      creatureName: null,
 
       goToTitle: () => set({ screen: 'title' }),
 
@@ -89,6 +92,7 @@ export const useGameStore = create<GameStore>()(
           battleMessage: `まがった「${entry.word}」があらわれた！`,
           stageCounter: state.stageCounter + 1,
           creatureSvg: null,
+          creatureName: null,
         })),
 
       onStrokeMistake: () => {
@@ -142,6 +146,8 @@ export const useGameStore = create<GameStore>()(
       setBattleMessage: (msg) => set({ battleMessage: msg }),
 
       setCreatureSvg: (svg) => set({ creatureSvg: svg }),
+
+      setCreatureName: (name) => set({ creatureName: name }),
 
       setBattleFeedback: (result, message) =>
         set({ battlePhase: 'feedback', battleResult: result, battleMessage: message }),
