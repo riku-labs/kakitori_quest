@@ -13,8 +13,10 @@ export function BattleStage() {
     currentEntry,
     currentCharIndex,
     battlePhase,
+    battleResult,
     endingResults,
     battleMessage,
+    creatureName,
     setBattleFeedback,
     confirmBattle,
   } = useGameStore()
@@ -25,7 +27,10 @@ export function BattleStage() {
   const strokeFeedback = buildStrokeFeedback(endingResults)
 
   // 敵HP: battling/feedback/won フェーズ中は「この文字クリア後」の値を先取りして表示
-  const isResolved = battlePhase === 'battling' || battlePhase === 'feedback' || battlePhase === 'won'
+  const isResolved =
+    battlePhase === 'battling' ||
+    (battlePhase === 'feedback' && battleResult === 'win') ||
+    battlePhase === 'won'
   const effectiveCleared = isResolved ? currentCharIndex + 1 : currentCharIndex
   const enemyHpRatio = word.length === 0 ? 1 : Math.max(0, (word.length - effectiveCleared) / word.length)
 
@@ -57,17 +62,17 @@ export function BattleStage() {
     >
       {/* 敵HPバー */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <span style={{ color: 'var(--color-enemy)', fontSize: '0.65em', whiteSpace: 'nowrap' }}>
-          まがった「{word}」
+        <span style={{ color: 'var(--color-enemy)', fontSize: '0.75em', whiteSpace: 'nowrap' }}>
+          {creatureName ?? word}
         </span>
         <div
           style={{
             flex: 1,
-            height: '8px',
+            height: '12px',
             background: '#2a0000',
             borderRadius: '4px',
             overflow: 'hidden',
-            border: '1px solid #550000',
+            border: '1px solid #770000',
           }}
         >
           <div
