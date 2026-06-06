@@ -6,6 +6,7 @@ import { EnemyDisplay } from './EnemyDisplay'
 import { HeroDisplay } from './HeroDisplay'
 import { MessageWindow } from './MessageWindow'
 import { useGameStore } from '../../store/gameStore'
+import { MSG } from '../../config/messages'
 
 export function BattleStage() {
   const {
@@ -37,9 +38,9 @@ export function BattleStage() {
     const result = resolveBattle(endingResults)
     const timer = setTimeout(() => {
       if (result === 'win') {
-        setBattleFeedback('win', `${char}は かちのこった！`)
+        setBattleFeedback('win', MSG.attackSuccess)
       } else {
-        setBattleFeedback('lose', `まがった「${char}」の かちだ…`)
+        setBattleFeedback('lose', MSG.attackFail)
       }
     }, 1500)
 

@@ -7,6 +7,7 @@ import { fetchWordDNA } from '../../logic/kanjiDna'
 import { generateCreature } from '../../logic/creatureGenerator'
 import { BattleStage } from './BattleStage'
 import { WritingArea } from './WritingArea'
+import { MSG } from '../../config/messages'
 
 export function GameScreen() {
   const {
@@ -47,7 +48,7 @@ export function GameScreen() {
           const creature = generateCreature(dna, word)
           setCreatureSvg(creature.svgString)
           setCreatureName(creature.name)
-          setBattleMessage(`${creature.name}があらわれた！`)
+          setBattleMessage(MSG.enemyAppeared(creature.name))
         }
       })
       .catch(() => {
@@ -59,7 +60,7 @@ export function GameScreen() {
           const creature = generateCreature(fallback, word)
           setCreatureSvg(creature.svgString)
           setCreatureName(creature.name)
-          setBattleMessage(`${creature.name}があらわれた！`)
+          setBattleMessage(MSG.enemyAppeared(creature.name))
         }
       })
 

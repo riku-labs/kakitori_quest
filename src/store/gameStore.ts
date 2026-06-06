@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { MSG } from '../config/messages'
 import type {
   Screen,
   WritingAreaPosition,
@@ -89,7 +90,7 @@ export const useGameStore = create<GameStore>()(
           hearts: MAX_HEARTS,
           endingResults: [],
           battlePhase: 'writing',
-          battleMessage: `まがった「${entry.word}」があらわれた！`,
+          battleMessage: MSG.loading,
           stageCounter: state.stageCounter + 1,
           creatureSvg: null,
           creatureName: null,
@@ -100,7 +101,7 @@ export const useGameStore = create<GameStore>()(
         if (hearts <= 0) {
           set({ screen: 'gameOver', battlePhase: 'lost' })
         } else {
-          set({ hearts, battleMessage: 'まちがえた！' })
+          set({ hearts, battleMessage: MSG.strokeMistake })
         }
       },
 
@@ -108,7 +109,7 @@ export const useGameStore = create<GameStore>()(
         set((state) => ({
           endingResults: [...state.endingResults, ...results],
           battlePhase: 'battling',
-          battleMessage: 'バトル！',
+          battleMessage: MSG.battle,
         }))
       },
 
@@ -125,7 +126,7 @@ export const useGameStore = create<GameStore>()(
           set({
             currentCharIndex: nextIndex,
             battlePhase: 'writing',
-            battleMessage: `${currentEntry.word[nextIndex]}があらわれた！`,
+            battleMessage: MSG.nextChar,
           })
         }
       },
@@ -138,7 +139,7 @@ export const useGameStore = create<GameStore>()(
           set({
             hearts,
             battlePhase: 'writing',
-            battleMessage: 'まけた…もういちど！',
+            battleMessage: MSG.defeat,
           })
         }
       },

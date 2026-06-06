@@ -1,8 +1,9 @@
 import { DQWindow } from '../components/ui/DQWindow'
 import { useGameStore } from '../store/gameStore'
+import { MSG } from '../config/messages'
 
 export function GameOverScreen() {
-  const { currentEntry, startStage, goToStageSelect } = useGameStore()
+  const { startStage, goToStageSelect, currentEntry } = useGameStore()
 
   const handleRetry = () => {
     if (currentEntry) startStage(currentEntry)
@@ -23,7 +24,7 @@ export function GameOverScreen() {
           ゲームオーバー
         </div>
         <div style={{ color: 'var(--color-text-dim)', fontSize: '0.8em', marginBottom: '24px' }}>
-          {currentEntry?.word ?? ''} をもういちどためそう
+          {MSG.gameOver}
         </div>
         <button
           onClick={handleRetry}
