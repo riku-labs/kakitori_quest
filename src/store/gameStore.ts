@@ -135,13 +135,14 @@ export const useGameStore = create<GameStore>()(
 
       onBattleLose: () => {
         const hearts = get().hearts - 1
+        const currentEntry = get().currentEntry
         if (hearts <= 0) {
           set({ screen: 'gameOver', battlePhase: 'lost' })
         } else {
           set({
             hearts,
             battlePhase: 'writing',
-            battleMessage: MSG.defeat(currentEntry.word),
+            battleMessage: MSG.defeat(currentEntry?.word ?? ''),
           })
         }
       },
