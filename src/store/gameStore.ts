@@ -1,6 +1,10 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { MSG } from '../config/messages'
+import { calcStageGold } from '../logic/goldReward'
+import { calculateStars } from '../logic/starLogic'
+import { useGoldStore } from './goldStore'
+import { useWardrobeStore } from './wardrobeStore'
 import type {
   Screen,
   WritingAreaPosition,
@@ -25,6 +29,7 @@ interface GameStore extends SaveData {
   battlePhase: BattlePhase
   battleMessage: string
   battleResult: 'win' | 'lose' | null
+  lastStageGold: number
 
   // クリーチャー
   stageCounter: number
@@ -39,6 +44,9 @@ interface GameStore extends SaveData {
   goToTitle: () => void
   goToStageSelect: () => void
   goToSettings: () => void
+  goToShop: () => void
+  goToWardrobe: () => void
+  healHeart: () => void
   startStage: (entry: WordEntry) => void
 
   // アクション: ゲームループ
@@ -75,12 +83,17 @@ export const useGameStore = create<GameStore>()(
       stageCounter: 0,
       creatureSvg: null,
       creatureName: null,
+      lastStageGold: 0,
 
       goToTitle: () => set({ screen: 'title' }),
 
       goToStageSelect: () => set({ screen: 'stageSelect' }),
 
       goToSettings: () => set({ screen: 'settings' }),
+
+      goToShop: () => set({ screen: 'shop' }),
+
+      goToWardrobe: () => set({ screen: 'wardrobe' }),
 
       startStage: (entry) =>
         set((state) => ({
@@ -119,8 +132,17 @@ export const useGameStore = create<GameStore>()(
         const nextIndex = currentCharIndex + 1
 
         if (nextIndex >= currentEntry.word.length) {
-          // 全文字クリア → ステージクリア
-          set({ screen: 'stageComplete', battlePhase: 'won' })
+          // 全文字クリア → ゴールド計算してステージクリア
+          const stars = calculateStars(get().endingResults)
+          const goldEarned = calcStageGold({
+            species: 0,
+            strokeCount: 0,
+            wordLength: currentEntry.word.length,
+            bestStarRating: stars,
+            playCount: 1,
+          })
+          useGoldStore.getState().addGold(goldEarned)
+          set({ screen: 'stageComplete', battlePhase: 'won', lastStageGold: goldEarned })
         } else {
           // 次の文字へ
           set({
@@ -163,6 +185,16 @@ export const useGameStore = create<GameStore>()(
       setWritingAreaPosition: (pos) => set({ writingAreaPosition: pos }),
 
       setCharSize: (size) => set({ charSize: size }),
+
+      healHeart: () => {
+        const { hearts } = get()
+        if (hearts >= MAX_HEARTS) return
+        if (!useWardrobeStore.getState().usePotion()) return
+        set((s) => ({
+          hearts: Math.min(s.hearts + 1, MAX_HEARTS),
+          battleMessage: MSG.potion.used,
+        }))
+      },
     }),
     {
       name: 'kakitori-quest-save-v1',
