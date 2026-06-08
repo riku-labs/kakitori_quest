@@ -6,6 +6,8 @@ export type Screen =
   | 'stageComplete'
   | 'gameOver'
   | 'settings'
+  | 'shop'
+  | 'wardrobe'
 
 // 書き取りエリアの位置
 export type WritingAreaPosition = 'auto' | 'right' | 'left' | 'bottom'
