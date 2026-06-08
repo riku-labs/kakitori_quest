@@ -8,4 +8,31 @@ export const MSG = {
   attackFail: (char: string) => `「${char}」ミス....`,
   defeat: (word: string) => `「${word}」にまけた…もういちどちょうせん！`,
   gameOver: 'もういちどちょうせん！',
+
+  goldEarned: (amount: number) => `+${amount}G ゲット！`,
+  goldBalance: (amount: number) => `G: ${amount}`,
+
+  shop: {
+    title: 'おみせ',
+    tabConsumable: 'しょうひん',
+    tabDecoration: 'そうしょく',
+    buy: 'かう',
+    insufficientGold: 'おかねがたりない',
+    purchased: (name: string) => `${name}をかった！`,
+    alreadyOwned: 'もっている',
+  },
+
+  wardrobe: {
+    title: 'そうび',
+    equip: 'そうびする',
+    unequip: 'はずす',
+    equippedBadge: '★そうびちゅう',
+    notOwned: 'もっていない',
+    equipped: (name: string) => `${name}をそうびした！`,
+  },
+
+  potion: {
+    buttonLabel: 'かいふくやく',
+    used: 'かいふくやくをつかった！',
+  },
 }
