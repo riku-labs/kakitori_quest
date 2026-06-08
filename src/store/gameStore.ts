@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { MSG } from '../config/messages'
 import type {
   Screen,
   WritingAreaPosition,
@@ -24,6 +25,15 @@ interface GameStore extends SaveData {
   battlePhase: BattlePhase
   battleMessage: string
   battleResult: 'win' | 'lose' | null
+
+  // クリーチャー
+  stageCounter: number
+  creatureSvg: string | null
+  creatureName: string | null
+
+  // アクション: クリーチャー
+  setCreatureSvg: (svg: string) => void
+  setCreatureName: (name: string) => void
 
   // アクション: 画面遷移
   goToTitle: () => void
@@ -62,6 +72,9 @@ export const useGameStore = create<GameStore>()(
       battlePhase: 'writing',
       battleMessage: '',
       battleResult: null,
+      stageCounter: 0,
+      creatureSvg: null,
+      creatureName: null,
 
       goToTitle: () => set({ screen: 'title' }),
 
@@ -70,22 +83,25 @@ export const useGameStore = create<GameStore>()(
       goToSettings: () => set({ screen: 'settings' }),
 
       startStage: (entry) =>
-        set({
+        set((state) => ({
           screen: 'game',
           currentEntry: entry,
           currentCharIndex: 0,
           hearts: MAX_HEARTS,
           endingResults: [],
           battlePhase: 'writing',
-          battleMessage: `${entry.word[0]}があらわれた！`,
-        }),
+          battleMessage: MSG.loading,
+          stageCounter: state.stageCounter + 1,
+          creatureSvg: null,
+          creatureName: null,
+        })),
 
       onStrokeMistake: () => {
         const hearts = get().hearts - 1
         if (hearts <= 0) {
           set({ screen: 'gameOver', battlePhase: 'lost' })
         } else {
-          set({ hearts, battleMessage: 'まちがえた！' })
+          set({ hearts, battleMessage: MSG.strokeMistake })
         }
       },
 
@@ -93,7 +109,7 @@ export const useGameStore = create<GameStore>()(
         set((state) => ({
           endingResults: [...state.endingResults, ...results],
           battlePhase: 'battling',
-          battleMessage: 'バトル！',
+          battleMessage: MSG.battle(state.creatureName ?? state.currentEntry?.word ?? ''),
         }))
       },
 
@@ -110,25 +126,30 @@ export const useGameStore = create<GameStore>()(
           set({
             currentCharIndex: nextIndex,
             battlePhase: 'writing',
-            battleMessage: `${currentEntry.word[nextIndex]}があらわれた！`,
+            battleMessage: MSG.nextChar(get().creatureName ?? currentEntry.word),
           })
         }
       },
 
       onBattleLose: () => {
         const hearts = get().hearts - 1
+        const currentEntry = get().currentEntry
         if (hearts <= 0) {
           set({ screen: 'gameOver', battlePhase: 'lost' })
         } else {
           set({
             hearts,
             battlePhase: 'writing',
-            battleMessage: 'まけた…もういちど！',
+            battleMessage: MSG.defeat(currentEntry?.word ?? ''),
           })
         }
       },
 
       setBattleMessage: (msg) => set({ battleMessage: msg }),
+
+      setCreatureSvg: (svg) => set({ creatureSvg: svg }),
+
+      setCreatureName: (name) => set({ creatureName: name }),
 
       setBattleFeedback: (result, message) =>
         set({ battlePhase: 'feedback', battleResult: result, battleMessage: message }),

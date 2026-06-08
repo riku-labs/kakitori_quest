@@ -67,3 +67,20 @@ export interface SaveData {
 
 // バトルフェーズの状態
 export type BattlePhase = 'writing' | 'battling' | 'won' | 'lost' | 'feedback'
+
+// 漢字DNA（ストロークデータから抽出したパラメータ）
+export interface KanjiDNA {
+  strokeCount: number   // 画数（合計）
+  hRatio: number        // 横画の比率 0〜1
+  curvature: number     // 平均曲率 0〜1
+  symmetry: number      // 左右対称度 0〜1
+  hue: number           // 色相 0〜359
+}
+
+// クリーチャー生成結果
+export interface CreatureSpec {
+  species: number       // 種族 0〜4
+  dna: KanjiDNA
+  svgString: string     // 120×120 の SVG 文字列
+  name: string          // 種族+元単語から生成した敵名
+}

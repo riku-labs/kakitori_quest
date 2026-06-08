@@ -1,10 +1,13 @@
-import { useCallback, useLayoutEffect, useState } from 'react'
-import type { StrokeEndingResult } from '../../types/game'
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react'
+import type { StrokeEndingResult, KanjiDNA } from '../../types/game'
 import { CHAR_SIZE_PX } from '../../types/game'
 import { useGameStore } from '../../store/gameStore'
 import { getEffectiveLayout } from '../../logic/layoutLogic'
+import { fetchWordDNA } from '../../logic/kanjiDna'
+import { generateCreature } from '../../logic/creatureGenerator'
 import { BattleStage } from './BattleStage'
 import { WritingArea } from './WritingArea'
+import { MSG } from '../../config/messages'
 
 export function GameScreen() {
   const {
@@ -14,8 +17,12 @@ export function GameScreen() {
     battlePhase,
     writingAreaPosition,
     charSize,
+    stageCounter,
     onStrokeMistake,
     onCharComplete,
+    setCreatureSvg,
+    setCreatureName,
+    setBattleMessage,
   } = useGameStore()
 
   const [isLandscape, setIsLandscape] = useState(
@@ -28,6 +35,37 @@ export function GameScreen() {
     observer.observe(document.documentElement)
     return () => observer.disconnect()
   }, [])
+
+  // ステージが変わるたびにクリーチャーを生成
+  useEffect(() => {
+    if (!currentEntry) return
+    let cancelled = false
+    const word = currentEntry.word
+
+    fetchWordDNA(word)
+      .then((dna) => {
+        if (!cancelled) {
+          const creature = generateCreature(dna, word)
+          setCreatureSvg(creature.svgString)
+          setCreatureName(creature.name)
+          setBattleMessage(MSG.enemyAppeared(creature.name))
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          const fallback: KanjiDNA = {
+            strokeCount: 4, hRatio: 0.5, curvature: 0.3, symmetry: 0.8,
+            hue: (word.codePointAt(0) ?? 0) % 360,
+          }
+          const creature = generateCreature(fallback, word)
+          setCreatureSvg(creature.svgString)
+          setCreatureName(creature.name)
+          setBattleMessage(MSG.enemyAppeared(creature.name))
+        }
+      })
+
+    return () => { cancelled = true }
+  }, [stageCounter]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const effectiveLayout = getEffectiveLayout(writingAreaPosition, isLandscape)
 
