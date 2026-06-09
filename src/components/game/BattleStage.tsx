@@ -6,6 +6,7 @@ import { EnemyDisplay } from './EnemyDisplay'
 import { HeroDisplay } from './HeroDisplay'
 import { MessageWindow } from './MessageWindow'
 import { useGameStore } from '../../store/gameStore'
+import { useWardrobeStore } from '../../store/wardrobeStore'
 import { MSG } from '../../config/messages'
 
 export function BattleStage() {
@@ -20,7 +21,10 @@ export function BattleStage() {
     creatureName,
     setBattleFeedback,
     confirmBattle,
+    healHeart,
   } = useGameStore()
+
+  const potionCount = useWardrobeStore((s) => s.potionCount)
 
   const char = currentEntry?.word[currentCharIndex] ?? ''
   const word = currentEntry?.word ?? ''
@@ -117,6 +121,24 @@ export function BattleStage() {
             : undefined
         }
       />
+
+      {battlePhase === 'writing' && potionCount > 0 && hearts < 3 && (
+        <button
+          onClick={healHeart}
+          style={{
+            background: 'transparent',
+            border: '1px solid #555',
+            color: 'var(--color-text-dim)',
+            fontFamily: 'inherit',
+            fontSize: '0.8em',
+            padding: '6px 12px',
+            cursor: 'pointer',
+            width: '100%',
+          }}
+        >
+          {MSG.potion.buttonLabel}（のこり{potionCount}こ）をつかう
+        </button>
+      )}
 
       {battlePhase === 'feedback' && (
         <button
