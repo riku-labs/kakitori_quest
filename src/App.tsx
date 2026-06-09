@@ -5,6 +5,8 @@ import { GameScreen } from './components/game/GameScreen'
 import { StageCompleteScreen } from './screens/StageCompleteScreen'
 import { GameOverScreen } from './screens/GameOverScreen'
 import { SettingsScreen } from './screens/SettingsScreen'
+import { ShopScreen } from './screens/ShopScreen'
+import { WardrobeScreen } from './screens/WardrobeScreen'
 
 export default function App() {
   const screen = useGameStore((s) => s.screen)
@@ -16,6 +18,8 @@ export default function App() {
     case 'stageComplete': return <StageCompleteScreen />
     case 'gameOver':      return <GameOverScreen />
     case 'settings':      return <SettingsScreen />
+    case 'shop':          return <ShopScreen />
+    case 'wardrobe':      return <WardrobeScreen />
     default:              return <TitleScreen />
   }
 }

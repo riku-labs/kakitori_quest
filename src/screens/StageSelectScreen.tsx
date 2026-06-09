@@ -1,9 +1,12 @@
 import { DQWindow } from '../components/ui/DQWindow'
 import { useGameStore } from '../store/gameStore'
 import { WORD_LIST } from '../data/wordList'
+import { useGoldStore } from '../store/goldStore'
+import { MSG } from '../config/messages'
 
 export function StageSelectScreen() {
   const { startStage, clearedWords, goToTitle } = useGameStore()
+  const gold = useGoldStore((s) => s.gold)
 
   return (
     <div
@@ -19,6 +22,9 @@ export function StageSelectScreen() {
       <DQWindow style={{ width: '360px', maxHeight: '80vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <div
           style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
             color: 'var(--color-accent)',
             fontSize: '0.9em',
             marginBottom: '12px',
@@ -26,7 +32,8 @@ export function StageSelectScreen() {
             paddingBottom: '8px',
           }}
         >
-          ことばをえらぼう
+          <span>ことばをえらぼう</span>
+          <span>{MSG.goldBalance(gold)}</span>
         </div>
 
         <div style={{ overflowY: 'auto', flex: 1 }}>

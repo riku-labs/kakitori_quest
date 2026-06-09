@@ -1,9 +1,29 @@
 import { DQWindow } from '../components/ui/DQWindow'
 import { useGameStore } from '../store/gameStore'
 
+const MENU_BTN_STYLE = {
+  display: 'block',
+  width: '100%',
+  background: 'none',
+  border: 'none',
+  color: 'var(--color-text)',
+  fontFamily: 'var(--font-pixel)',
+  fontSize: '1em',
+  padding: '8px',
+  cursor: 'pointer',
+  textAlign: 'left' as const,
+}
+
 export function TitleScreen() {
   const goToStageSelect = useGameStore((s) => s.goToStageSelect)
-  const goToSettings = useGameStore((s) => s.goToSettings)
+  const goToShop       = useGameStore((s) => s.goToShop)
+  const goToWardrobe   = useGameStore((s) => s.goToWardrobe)
+  const goToSettings   = useGameStore((s) => s.goToSettings)
+
+  const hover = (e: React.MouseEvent<HTMLButtonElement>) =>
+    (e.currentTarget.style.color = 'var(--color-accent)')
+  const leave = (e: React.MouseEvent<HTMLButtonElement>) =>
+    (e.currentTarget.style.color = 'var(--color-text)')
 
   return (
     <div
@@ -36,42 +56,16 @@ export function TitleScreen() {
         >
           QUEST
         </div>
-        <button
-          onClick={goToStageSelect}
-          style={{
-            display: 'block',
-            width: '100%',
-            background: 'none',
-            border: 'none',
-            color: 'var(--color-text)',
-            fontFamily: 'var(--font-pixel)',
-            fontSize: '1em',
-            padding: '8px',
-            cursor: 'pointer',
-            textAlign: 'left',
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-accent)')}
-          onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--color-text)')}
-        >
+        <button style={MENU_BTN_STYLE} onClick={goToStageSelect} onMouseEnter={hover} onMouseLeave={leave}>
           ▶　あそぶ
         </button>
-        <button
-          onClick={goToSettings}
-          style={{
-            display: 'block',
-            width: '100%',
-            background: 'none',
-            border: 'none',
-            color: 'var(--color-text)',
-            fontFamily: 'var(--font-pixel)',
-            fontSize: '1em',
-            padding: '8px',
-            cursor: 'pointer',
-            textAlign: 'left',
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-accent)')}
-          onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--color-text)')}
-        >
+        <button style={MENU_BTN_STYLE} onClick={goToShop} onMouseEnter={hover} onMouseLeave={leave}>
+          　　おみせ
+        </button>
+        <button style={MENU_BTN_STYLE} onClick={goToWardrobe} onMouseEnter={hover} onMouseLeave={leave}>
+          　　そうび
+        </button>
+        <button style={MENU_BTN_STYLE} onClick={goToSettings} onMouseEnter={hover} onMouseLeave={leave}>
           　　せってい
         </button>
       </DQWindow>
