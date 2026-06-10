@@ -1,22 +1,15 @@
-import { useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { DQWindow } from '../components/ui/DQWindow'
 import { useGameStore } from '../store/gameStore'
-import { useWorldStore } from '../store/worldStore'
 import { WORLDS } from '../config/worlds'
 import { MSG } from '../config/messages'
 
 export function WorldClearScreen() {
-  const { goToWorldSelect } = useGameStore()
-  const { currentWorldId, setClearedWorld } = useWorldStore()
+  const { goToWorldSelect, currentWorldId } = useGameStore()
 
   const currentIdx = WORLDS.findIndex((w) => w.id === currentWorldId)
   const currentWorld = WORLDS[currentIdx]
   const nextWorld = WORLDS[currentIdx + 1] ?? null
-
-  useEffect(() => {
-    setClearedWorld(currentWorldId)
-  }, [currentWorldId, setClearedWorld])
 
   return (
     <div

@@ -1,14 +1,12 @@
 import { DQWindow } from '../components/ui/DQWindow'
 import { useGameStore } from '../store/gameStore'
-import { useWorldStore } from '../store/worldStore'
 import { useGoldStore } from '../store/goldStore'
 import { WORD_LIST } from '../data/wordList'
-import { WORLDS, isWorldComplete } from '../config/worlds'
+import { WORLDS, isWorldComplete, isBossCleared } from '../config/worlds'
 import { MSG } from '../config/messages'
 
 export function StageSelectScreen() {
-  const { startStage, startBossStage, clearedWords, goToWorldSelect } = useGameStore()
-  const { currentWorldId, clearedWorlds } = useWorldStore()
+  const { startStage, startBossStage, clearedWords, goToWorldSelect, currentWorldId } = useGameStore()
   const gold = useGoldStore((s) => s.gold)
 
   const world = WORLDS.find((w) => w.id === currentWorldId)
@@ -17,7 +15,7 @@ export function StageSelectScreen() {
     : []
 
   const allNormalCleared = world ? isWorldComplete(clearedWords, world.wordIds) : false
-  const worldAlreadyCleared = clearedWorlds.includes(currentWorldId)
+  const worldAlreadyCleared = world ? isBossCleared(clearedWords, world.id) : false
   const showBossStage = allNormalCleared && !worldAlreadyCleared && world?.bossWord
 
   return (

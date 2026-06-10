@@ -33,10 +33,16 @@ interface GameStore extends SaveData {
   lastStageGold: number
   isBossStage: boolean
 
+  // 現在のワールド（セッション状態・非永続）
+  currentWorldId: string
+
   // クリーチャー
   stageCounter: number
   creatureSvg: string | null
   creatureName: string | null
+
+  // アクション: ワールド選択
+  setCurrentWorld: (id: string) => void
 
   // アクション: クリーチャー
   setCreatureSvg: (svg: string) => void
@@ -78,6 +84,7 @@ export const useGameStore = create<GameStore>()(
 
       // セッション状態の初期値
       screen: 'title',
+      currentWorldId: 'grade1',
       currentEntry: null,
       currentCharIndex: 0,
       hearts: MAX_HEARTS,
@@ -90,6 +97,8 @@ export const useGameStore = create<GameStore>()(
       creatureName: null,
       lastStageGold: 0,
       isBossStage: false,
+
+      setCurrentWorld: (id) => set({ currentWorldId: id }),
 
       goToTitle: () => set({ screen: 'title' }),
 
@@ -167,7 +176,12 @@ export const useGameStore = create<GameStore>()(
 
         if (nextIndex >= currentEntry.word.length) {
           if (isBossStage) {
-            set({ screen: 'world-clear', battlePhase: 'won' })
+            const worldId = get().currentWorldId
+            set((s) => ({
+              screen: 'world-clear',
+              battlePhase: 'won',
+              clearedWords: { ...s.clearedWords, [`boss-${worldId}`]: 1 },
+            }))
           } else {
             const stars = calculateStars(get().endingResults)
             const goldEarned = calcStageGold({
