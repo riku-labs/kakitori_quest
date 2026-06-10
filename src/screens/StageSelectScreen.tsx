@@ -1,12 +1,24 @@
 import { DQWindow } from '../components/ui/DQWindow'
 import { useGameStore } from '../store/gameStore'
-import { WORD_LIST } from '../data/wordList'
+import { useWorldStore } from '../store/worldStore'
 import { useGoldStore } from '../store/goldStore'
+import { WORD_LIST } from '../data/wordList'
+import { WORLDS, isWorldComplete } from '../config/worlds'
 import { MSG } from '../config/messages'
 
 export function StageSelectScreen() {
-  const { startStage, clearedWords, goToTitle } = useGameStore()
+  const { startStage, startBossStage, clearedWords, goToWorldSelect } = useGameStore()
+  const { currentWorldId, clearedWorlds } = useWorldStore()
   const gold = useGoldStore((s) => s.gold)
+
+  const world = WORLDS.find((w) => w.id === currentWorldId)
+  const worldWords = world
+    ? WORD_LIST.filter((e) => world.wordIds.includes(e.id))
+    : []
+
+  const allNormalCleared = world ? isWorldComplete(clearedWords, world.wordIds) : false
+  const worldAlreadyCleared = clearedWorlds.includes(currentWorldId)
+  const showBossStage = allNormalCleared && !worldAlreadyCleared && world?.bossWord
 
   return (
     <div
@@ -32,16 +44,16 @@ export function StageSelectScreen() {
             paddingBottom: '8px',
           }}
         >
-          <span>ことばをえらぼう</span>
+          <span>{world?.name ?? 'ことばをえらぼう'}</span>
           <span>{MSG.goldBalance(gold)}</span>
         </div>
 
         <div style={{ overflowY: 'auto', flex: 1 }}>
-          {WORD_LIST.map((entry) => {
-            const bestStar = clearedWords[entry.word] ?? 0
+          {worldWords.map((entry) => {
+            const bestStar = clearedWords[entry.id] ?? 0
             return (
               <button
-                key={entry.word}
+                key={entry.id}
                 onClick={() => startStage(entry)}
                 style={{
                   display: 'flex',
@@ -69,10 +81,38 @@ export function StageSelectScreen() {
               </button>
             )
           })}
+
+          {showBossStage && world && (
+            <button
+              onClick={() => startBossStage(world.id)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                width: '100%',
+                background: 'none',
+                border: '1px solid var(--color-accent)',
+                borderRadius: '4px',
+                color: 'var(--color-accent)',
+                fontFamily: 'var(--font-pixel)',
+                fontSize: '1em',
+                padding: '10px 8px',
+                cursor: 'pointer',
+                textAlign: 'left',
+                marginTop: '8px',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = '#111')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
+            >
+              <span style={{ fontSize: '1.4em' }}>{world.bossHint}</span>
+              <span style={{ flex: 1 }}>{MSG.world.bossLabel(world.bossHint)}</span>
+              <span style={{ fontSize: '0.8em' }}>{MSG.world.bossStage}</span>
+            </button>
+          )}
         </div>
 
         <button
-          onClick={goToTitle}
+          onClick={goToWorldSelect}
           style={{
             marginTop: '12px',
             background: 'none',
