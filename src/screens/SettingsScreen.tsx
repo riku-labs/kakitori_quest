@@ -1,6 +1,9 @@
 import { DQWindow } from '../components/ui/DQWindow'
 import { useGameStore } from '../store/gameStore'
+import { WORLDS } from '../config/worlds'
 import type { WritingAreaPosition, CharSize } from '../types/game'
+
+const DEBUG_PASSWORD = 'ochansensusu'
 
 const POSITIONS: { value: WritingAreaPosition; label: string }[] = [
   { value: 'auto',   label: 'じどう（おすすめ）' },
@@ -16,7 +19,29 @@ const CHAR_SIZES: { value: CharSize; label: string }[] = [
 ]
 
 export function SettingsScreen() {
-  const { writingAreaPosition, setWritingAreaPosition, charSize, setCharSize, goToTitle } = useGameStore()
+  const { writingAreaPosition, setWritingAreaPosition, charSize, setCharSize, goToTitle, goToStageSelect, setCurrentWorld } = useGameStore()
+
+  function handleDebugFromHere() {
+    const pw = window.prompt('password')
+    if (pw !== DEBUG_PASSWORD) return
+    const worldId = window.prompt('world id (grade1~grade6)')
+    if (!worldId) return
+    const world = WORLDS.find((w) => w.id === worldId)
+    if (!world) return
+    const toSet = world.wordIds.slice(1)
+    const patch: Record<string, number> = {}
+    for (const id of toSet) patch[id] = 3
+    useGameStore.setState((s) => ({ clearedWords: { ...s.clearedWords, ...patch } }))
+    setCurrentWorld(worldId)
+    goToStageSelect()
+  }
+
+  function handleClearAll() {
+    const pw = window.prompt('password')
+    if (pw !== DEBUG_PASSWORD) return
+    useGameStore.setState({ clearedWords: {}, currentWorldId: 'grade1' })
+    goToTitle()
+  }
 
   return (
     <div
@@ -102,6 +127,18 @@ export function SettingsScreen() {
         </button>
 
         <div style={{ marginTop: '24px', borderTop: '1px solid #333', paddingTop: '12px', fontSize: '0.55em', color: '#444', lineHeight: 1.6 }}>
+          {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+          <span
+            onClick={handleDebugFromHere}
+            style={{ cursor: 'pointer', color: '#333' }}
+          >and debug from here</span>
+          {' / '}
+          {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+          <span
+            onClick={handleClearAll}
+            style={{ cursor: 'pointer', color: '#333' }}
+          >clear all</span>
+          {' '}
           Character stroke data via{' '}
           <a href="https://github.com/k1LoW/hanzi-writer-data-jp" target="_blank" rel="noopener noreferrer" style={{ color: '#555' }}>@k1low/hanzi-writer-data-jp</a>,
           derived from{' '}
