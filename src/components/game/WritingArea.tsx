@@ -70,6 +70,7 @@ export function WritingArea({
     let cancelled = false
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let charInstance: any = null
+    let observer: MutationObserver | null = null
 
     const init = async () => {
       const { char: kakitoriChar } = await import('@k1low/kakitori')
@@ -111,8 +112,21 @@ export function WritingArea({
           handleComplete()
         },
       })
+
+      // start() は内部で CDN fetch を非同期開始するだけで即座に返る。
+      // ライブラリが実際にストロークガイドを DOM に描画したことを
+      // MutationObserver で検知してから isLoaded=true にする。
+      // DOM 変化がなければ 6 秒タイムアウトが loadError=true にする。
+      observer = new MutationObserver(() => {
+        if (!cancelled && hostRef.current && hostRef.current.childElementCount > 0) {
+          setIsLoaded(true)
+          observer?.disconnect()
+          observer = null
+        }
+      })
+      observer.observe(hostRef.current, { childList: true, subtree: true })
+
       charInstance.start()
-      if (!cancelled) setIsLoaded(true)
     }
 
     init().catch(() => {
@@ -121,6 +135,7 @@ export function WritingArea({
 
     return () => {
       cancelled = true
+      observer?.disconnect()
       charInstance?.unmount?.()
     }
   }, [char, maxSize, onMistake, handleComplete, retryKey])
