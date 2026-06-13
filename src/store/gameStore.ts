@@ -157,11 +157,12 @@ export const useGameStore = create<GameStore>()(
       },
 
       onStrokeMistake: () => {
-        play('mistake')
         const hearts = get().hearts - 1
         if (hearts <= 0) {
+          play('game_over')
           set({ screen: 'gameOver', battlePhase: 'lost' })
         } else {
+          play('mistake')
           set({ hearts, battleMessage: MSG.strokeMistake })
         }
       },
@@ -212,12 +213,13 @@ export const useGameStore = create<GameStore>()(
       },
 
       onBattleLose: () => {
-        play('battle_lose')
         const hearts = get().hearts - 1
         const currentEntry = get().currentEntry
         if (hearts <= 0) {
+          play('game_over')
           set({ screen: 'gameOver', battlePhase: 'lost' })
         } else {
+          play('battle_lose')
           set({
             hearts,
             battlePhase: 'writing',

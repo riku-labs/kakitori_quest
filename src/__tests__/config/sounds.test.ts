@@ -3,8 +3,8 @@ import { describe, it, expect } from 'vitest'
 import { SOUND_SPECS, SOUND_IDS } from '../../config/sounds'
 
 describe('SOUND_SPECS', () => {
-  it('10種すべての SoundId に非空の spec が定義されている', () => {
-    expect(SOUND_IDS).toHaveLength(10)
+  it('11種すべての SoundId に非空の spec が定義されている', () => {
+    expect(SOUND_IDS).toHaveLength(11)
     for (const id of SOUND_IDS) {
       const spec = SOUND_SPECS[id]
       expect(spec, `spec for ${id}`).toBeDefined()

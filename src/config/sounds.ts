@@ -14,6 +14,7 @@ export type SoundId =
   | 'battle_start'
   | 'boss_start'
   | 'boss_clear'
+  | 'game_over'
 
 export const SOUND_IDS: SoundId[] = [
   'correct_stroke',
@@ -26,6 +27,7 @@ export const SOUND_IDS: SoundId[] = [
   'battle_start',
   'boss_start',
   'boss_clear',
+  'game_over',
 ]
 
 export type Waveform = 'sine' | 'square' | 'sawtooth' | 'triangle'
@@ -98,5 +100,11 @@ export const SOUND_SPECS: Record<SoundId, Note[]> = {
     { type: 'sine', freq: 783.99, start: 0.32, duration: 0.16, gain: 0.3 },
     { type: 'sine', freq: 1046.5, start: 0.48, duration: 0.16, gain: 0.3 },
     { type: 'sine', freq: 1318.5, start: 0.64, duration: 0.4, gain: 0.3 },
+  ],
+  // ゲームオーバー: 優しめの下降アルペジオ G4→E4→C4（子供向けに角の立たない triangle）
+  game_over: [
+    { type: 'triangle', freq: 392, start: 0, duration: 0.25, gain: 0.3 },
+    { type: 'triangle', freq: 329.63, start: 0.25, duration: 0.25, gain: 0.3 },
+    { type: 'triangle', freq: 261.63, start: 0.5, duration: 0.5, gain: 0.3 },
   ],
 }

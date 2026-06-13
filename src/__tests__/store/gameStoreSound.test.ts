@@ -57,6 +57,20 @@ describe('gameStore 効果音', () => {
     expect(playMock).toHaveBeenCalledWith('battle_lose')
   })
 
+  it('画のミスで力尽きると game_over が鳴り、mistake は鳴らない', () => {
+    useGameStore.setState({ hearts: 1 })
+    useGameStore.getState().onStrokeMistake()
+    expect(playMock).toHaveBeenCalledWith('game_over')
+    expect(playMock).not.toHaveBeenCalledWith('mistake')
+  })
+
+  it('バトル敗北で力尽きると game_over が鳴り、battle_lose は鳴らない', () => {
+    useGameStore.setState({ hearts: 1, currentEntry: { id: 'w', word: 'やま', reading: 'やま', hint: '⛰' } })
+    useGameStore.getState().onBattleLose()
+    expect(playMock).toHaveBeenCalledWith('game_over')
+    expect(playMock).not.toHaveBeenCalledWith('battle_lose')
+  })
+
   it('非最終文字の勝利で char_complete が鳴る', () => {
     useGameStore.setState({
       currentEntry: { id: 'w', word: 'やま', reading: 'やま', hint: '⛰' },
