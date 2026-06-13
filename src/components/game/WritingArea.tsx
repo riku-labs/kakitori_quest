@@ -2,6 +2,9 @@ import { useEffect, useRef, useCallback, useState } from 'react'
 import type { StrokeEndingResult, EndingType } from '../../types/game'
 import { STROKE_ENDING_OVERRIDES } from '../../data/strokeEndingOverrides'
 import { HeartDisplay } from '../ui/HeartDisplay'
+import { useGameStore } from '../../store/gameStore'
+import { useOnlineStatus } from '../../hooks/useOnlineStatus'
+import { MSG } from '../../config/messages'
 
 interface WritingAreaProps {
   char: string
@@ -27,11 +30,29 @@ export function WritingArea({
   onMistake,
   onComplete,
 }: WritingAreaProps) {
+  const goToTitle = useGameStore((s) => s.goToTitle)
+  const isOnline = useOnlineStatus()
   const wrapperRef = useRef<HTMLDivElement>(null)
   const hostRef = useRef<HTMLDivElement>(null)
   const strokeResultsRef = useRef<StrokeEndingResult[]>([])
   const strokeIndexRef = useRef(0)
   const [hasStarted, setHasStarted] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false)
+  const [showLoading, setShowLoading] = useState(false)
+  const [loadError, setLoadError] = useState(false)
+  const [retryKey, setRetryKey] = useState(0)
+
+  const retry = useCallback(() => {
+    setLoadError(false)
+    setHasStarted(false)
+    setIsLoaded(false)
+    setRetryKey((k) => k + 1)
+  }, [])
+
+  // オンラインに復帰したら自動リトライ
+  useEffect(() => {
+    if (isOnline && loadError) retry()
+  }, [isOnline]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleComplete = useCallback(() => {
     onComplete(strokeResultsRef.current)
@@ -43,10 +64,13 @@ export function WritingArea({
     strokeResultsRef.current = []
     strokeIndexRef.current = 0
     setHasStarted(false)
+    setIsLoaded(false)
+    setLoadError(false)
 
     let cancelled = false
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let charInstance: any = null
+    let observer: MutationObserver | null = null
 
     const init = async () => {
       const { char: kakitoriChar } = await import('@k1low/kakitori')
@@ -88,16 +112,98 @@ export function WritingArea({
           handleComplete()
         },
       })
+
+      // start() は内部で CDN fetch を非同期開始するだけで即座に返る。
+      // ライブラリが実際にストロークガイドを DOM に描画したことを
+      // MutationObserver で検知してから isLoaded=true にする。
+      // DOM 変化がなければ 6 秒タイムアウトが loadError=true にする。
+      observer = new MutationObserver(() => {
+        if (!cancelled && hostRef.current && hostRef.current.childElementCount > 0) {
+          setIsLoaded(true)
+          observer?.disconnect()
+          observer = null
+        }
+      })
+      observer.observe(hostRef.current, { childList: true, subtree: true })
+
       charInstance.start()
     }
 
-    init()
+    init().catch(() => {
+      if (!cancelled) setLoadError(true)
+    })
 
     return () => {
       cancelled = true
+      observer?.disconnect()
       charInstance?.unmount?.()
     }
-  }, [char, maxSize, onMistake, handleComplete])
+  }, [char, maxSize, onMistake, handleComplete, retryKey])
+
+  // 800ms 後もまだロード未完了なら loading インジケーターを表示
+  useEffect(() => {
+    setShowLoading(false)
+    if (isLoaded || loadError) return
+    const timer = setTimeout(() => setShowLoading(true), 800)
+    return () => clearTimeout(timer)
+  }, [char, isLoaded, loadError, retryKey])
+
+  // ライブラリが内部エラーを握りつぶして一切コールバックを呼ばない場合に備え
+  // isLoaded にならないまま一定時間経過したらエラー扱いにする
+  useEffect(() => {
+    if (isLoaded || loadError) return
+    const timer = setTimeout(() => setLoadError(true), 6000)
+    return () => clearTimeout(timer)
+  }, [char, isLoaded, loadError, retryKey])
+
+  if (loadError) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100%',
+          gap: '16px',
+          border: '3px solid var(--color-window-border)',
+          background: '#000',
+          padding: '16px',
+          textAlign: 'center',
+        }}
+      >
+        <p style={{ color: 'var(--color-accent)', fontSize: '0.85em', lineHeight: 1.8 }}>
+          {MSG.offline.loadError}
+        </p>
+        <button
+          onClick={retry}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'var(--color-accent)',
+            fontFamily: 'var(--font-pixel)',
+            fontSize: '1em',
+            cursor: 'pointer',
+          }}
+        >
+          ▶　{MSG.offline.retry}
+        </button>
+        <button
+          onClick={goToTitle}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'var(--color-text)',
+            fontFamily: 'var(--font-pixel)',
+            fontSize: '1em',
+            cursor: 'pointer',
+          }}
+        >
+          ▶　{MSG.offline.goToTitle}
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div
@@ -131,7 +237,7 @@ export function WritingArea({
       >
         <div
           ref={hostRef}
-          className={hasStarted ? undefined : 'writing-pulse'}
+          className={isLoaded && !hasStarted ? 'writing-pulse' : undefined}
           style={{
             position: 'relative',
             border: '2px solid transparent',
@@ -140,7 +246,24 @@ export function WritingArea({
           }}
         />
       </div>
-      {!hasStarted && (
+      {!isLoaded && showLoading && (
+        <div
+          className="loading-blink"
+          style={{
+            position: 'absolute',
+            bottom: '60px',
+            left: 0,
+            right: 0,
+            textAlign: 'center',
+            color: 'var(--color-accent)',
+            fontSize: '0.75em',
+            pointerEvents: 'none',
+          }}
+        >
+          {MSG.loading}
+        </div>
+      )}
+      {isLoaded && !hasStarted && (
         <div
           style={{
             position: 'absolute',
