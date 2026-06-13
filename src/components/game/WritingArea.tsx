@@ -106,6 +106,14 @@ export function WritingArea({
     }
   }, [char, maxSize, onMistake, handleComplete])
 
+  // ライブラリが内部エラーを握りつぶして一切コールバックを呼ばない場合に備え
+  // hasStarted にならないまま一定時間経過したらエラー扱いにする
+  useEffect(() => {
+    if (hasStarted || loadError) return
+    const timer = setTimeout(() => setLoadError(true), 6000)
+    return () => clearTimeout(timer)
+  }, [char, hasStarted, loadError])
+
   if (loadError) {
     return (
       <div
