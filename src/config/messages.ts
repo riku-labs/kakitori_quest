@@ -57,5 +57,6 @@ export const MSG = {
     body4: 'インターネットが',
     body5: 'ひつようです。',
     close: 'とじる',
+    goToTitle: 'タイトルにもどる',
   },
 }

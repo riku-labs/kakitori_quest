@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
+import { useGameStore } from '../../store/gameStore'
 import { MSG } from '../../config/messages'
 import { DQWindow } from './DQWindow'
 
 export function OfflineBadge() {
   const isOnline = useOnlineStatus()
+  const goToTitle = useGameStore((s) => s.goToTitle)
   const [open, setOpen] = useState(false)
 
   if (isOnline) return null
@@ -66,6 +68,22 @@ export function OfflineBadge() {
                 <span style={{ display: 'block' }}>{MSG.offline.body4}</span>
                 <span style={{ display: 'block' }}>{MSG.offline.body5}</span>
               </p>
+              <button
+                onClick={() => { goToTitle(); setOpen(false) }}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--color-accent)',
+                  fontFamily: 'var(--font-pixel)',
+                  fontSize: '1em',
+                  padding: '8px',
+                  cursor: 'pointer',
+                }}
+              >
+                ▶　{MSG.offline.goToTitle}
+              </button>
               <button
                 onClick={() => setOpen(false)}
                 style={{
