@@ -27,7 +27,10 @@ interface GameStore extends SaveData {
   currentEntry: WordEntry | null
   currentCharIndex: number
   hearts: number
+  /** ステージ全体の累積結果（★計算用） */
   endingResults: StrokeEndingResult[]
+  /** 直近のターン（1文字ぶん）の結果。フィードバック表示・戦闘判定用 */
+  currentTurnResults: StrokeEndingResult[]
   battlePhase: BattlePhase
   battleMessage: string
   battleResult: 'win' | 'lose' | null
@@ -90,6 +93,7 @@ export const useGameStore = create<GameStore>()(
       currentCharIndex: 0,
       hearts: MAX_HEARTS,
       endingResults: [],
+      currentTurnResults: [],
       battlePhase: 'writing',
       battleMessage: '',
       battleResult: null,
@@ -124,6 +128,7 @@ export const useGameStore = create<GameStore>()(
           currentCharIndex: 0,
           hearts: MAX_HEARTS,
           endingResults: [],
+          currentTurnResults: [],
           battlePhase: 'writing',
           battleMessage: MSG.loading,
           stageCounter: state.stageCounter + 1,
@@ -148,6 +153,7 @@ export const useGameStore = create<GameStore>()(
           currentCharIndex: 0,
           hearts: MAX_HEARTS,
           endingResults: [],
+          currentTurnResults: [],
           battlePhase: 'writing',
           battleMessage: MSG.loading,
           stageCounter: state.stageCounter + 1,
@@ -170,6 +176,7 @@ export const useGameStore = create<GameStore>()(
       onCharComplete: (results) => {
         set((state) => ({
           endingResults: [...state.endingResults, ...results],
+          currentTurnResults: results,
           battlePhase: 'battling',
           battleMessage: MSG.battle(state.creatureName ?? state.currentEntry?.word ?? ''),
         }))

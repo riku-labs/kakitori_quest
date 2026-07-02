@@ -1,6 +1,8 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
-import type { StrokeEndingResult, EndingType } from '../../types/game'
+import type { StrokeEndingResult } from '../../types/game'
 import { STROKE_ENDING_OVERRIDES } from '../../data/strokeEndingOverrides'
+import { inferEndingType } from '../../logic/inferEndingType'
+import { trimLiftFlick } from '../../logic/liftFlick'
 import { HeartDisplay } from '../ui/HeartDisplay'
 import { useGameStore } from '../../store/gameStore'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
@@ -14,13 +16,6 @@ interface WritingAreaProps {
   maxSize: number
   onMistake: () => void
   onComplete: (results: StrokeEndingResult[]) => void
-}
-
-function inferEndingType(velocityProfile?: string): EndingType | null {
-  if (velocityProfile === 'decelerating') return 'tome'
-  if (velocityProfile === 'accelerating') return 'harai'
-  if (velocityProfile === 'constant') return 'hane'
-  return null
 }
 
 export function WritingArea({
@@ -74,7 +69,8 @@ export function WritingArea({
     let observer: MutationObserver | null = null
 
     const init = async () => {
-      const { char: kakitoriChar } = await import('@k1low/kakitori')
+      const { char: kakitoriChar, checkStrokeEnding, HANZI_PRESCALED_SIZE } =
+        await import('@k1low/kakitori')
 
       // StrictMode の二重 effect によるレース: cleanup が先に走ると
       // charInstance は null のままなので unmount されない。
@@ -85,7 +81,6 @@ export function WritingArea({
       const rect = wrapperRef.current!.getBoundingClientRect()
       const containerSize = Math.min(rect.width, rect.height)
       const size = Math.min(containerSize, maxSize)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const override = STROKE_ENDING_OVERRIDES[char]
       if (override) charInstance.setStrokeEndings(override)
 
@@ -95,11 +90,25 @@ export function WritingArea({
         onCorrectStroke: (data: any) => {
           play('correct_stroke')
           setHasStarted(true)
+          let strokeEnding = data?.strokeEnding
+          // 終端ミス判定時のみ、離し際フリックを除去して再判定する（Issue #12）。
+          // 救済専用（判定が厳しくなる方向には働かない）。
+          if (strokeEnding && strokeEnding.correct === false && Array.isArray(data?.points)) {
+            const trimmed = trimLiftFlick(data.points)
+            if (trimmed) {
+              const rechecked = checkStrokeEnding(
+                trimmed,
+                { types: strokeEnding.expected },
+                { drawableSize: HANZI_PRESCALED_SIZE },
+              )
+              if (rechecked.correct) strokeEnding = rechecked
+            }
+          }
           const result: StrokeEndingResult = {
             strokeIndex: strokeIndexRef.current++,
-            detectedEnding: inferEndingType(data?.strokeEnding?.velocityProfile),
-            isCorrect: data?.strokeEnding?.correct ?? true,
-            expectedEndings: ((data?.strokeEnding?.expected ?? []) as string[])
+            detectedEnding: inferEndingType(strokeEnding?.velocityProfile),
+            isCorrect: strokeEnding?.correct ?? true,
+            expectedEndings: ((strokeEnding?.expected ?? []) as string[])
               .filter((e): e is 'tome' | 'hane' | 'harai' =>
                 e === 'tome' || e === 'hane' || e === 'harai',
               ),
