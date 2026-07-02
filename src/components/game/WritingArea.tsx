@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
-import type { StrokeEndingResult, EndingType } from '../../types/game'
+import type { StrokeEndingResult } from '../../types/game'
 import { STROKE_ENDING_OVERRIDES } from '../../data/strokeEndingOverrides'
+import { inferEndingType } from '../../logic/inferEndingType'
 import { HeartDisplay } from '../ui/HeartDisplay'
 import { useGameStore } from '../../store/gameStore'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
@@ -14,13 +15,6 @@ interface WritingAreaProps {
   maxSize: number
   onMistake: () => void
   onComplete: (results: StrokeEndingResult[]) => void
-}
-
-function inferEndingType(velocityProfile?: string): EndingType | null {
-  if (velocityProfile === 'decelerating') return 'tome'
-  if (velocityProfile === 'accelerating') return 'harai'
-  if (velocityProfile === 'constant') return 'hane'
-  return null
 }
 
 export function WritingArea({
