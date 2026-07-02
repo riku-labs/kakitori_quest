@@ -19,87 +19,86 @@ describe('buildStrokeFeedback', () => {
     expect(buildStrokeFeedback([])).toBeNull()
   })
 
-  it('1画不正解（tome 検出）のメッセージを返す', () => {
-    const results = [makeResult(0, true, 'tome'), makeResult(1, false, 'tome')]
-    expect(buildStrokeFeedback(results)).toBe('2かくめ：とめになっています')
+  it('期待種別あり: 検出種別との対比とやり方のヒントを返す', () => {
+    const results = [makeResult(0, false, 'harai', ['tome'])]
+    expect(buildStrokeFeedback(results)).toBe(
+      '1かくめ：はらいではなく「とめ」！さいごはピタッととめよう',
+    )
   })
 
-  it('harai 検出のメッセージを返す', () => {
-    const results = [makeResult(0, false, 'harai')]
-    expect(buildStrokeFeedback(results)).toBe('1かくめ：はらいになっています')
+  it('期待種別あり: はねが期待されるケース', () => {
+    const results = [makeResult(0, false, 'tome', ['hane'])]
+    expect(buildStrokeFeedback(results)).toBe(
+      '1かくめ：とめではなく「はね」！さいごはシュッとはねよう',
+    )
   })
 
-  it('hane 検出のメッセージを返す', () => {
-    const results = [makeResult(0, false, 'hane')]
-    expect(buildStrokeFeedback(results)).toBe('1かくめ：はねになっています')
+  it('期待種別あり: はらいが期待されるケース', () => {
+    const results = [makeResult(0, false, 'tome', ['harai'])]
+    expect(buildStrokeFeedback(results)).toBe(
+      '1かくめ：とめではなく「はらい」！さいごはスーッとはらおう',
+    )
+  })
+
+  it('期待種別が複数ある場合は最初の1つを使う', () => {
+    const results = [makeResult(0, false, 'hane', ['tome', 'harai'])]
+    expect(buildStrokeFeedback(results)).toBe(
+      '1かくめ：はねではなく「とめ」！さいごはピタッととめよう',
+    )
+  })
+
+  it('期待種別なし（検出のみ）: 検出種別を伝える', () => {
+    const results = [makeResult(0, true, 'tome'), makeResult(1, false, 'harai')]
+    expect(buildStrokeFeedback(results)).toBe('2かくめ：はらいになっているよ')
+  })
+
+  it('検出種別が期待種別に含まれるのに不正解（はね）は方向ミスのメッセージを返す', () => {
+    const results = [makeResult(0, false, 'hane', ['hane'])]
+    expect(buildStrokeFeedback(results)).toBe('1かくめ：はねるむきをたしかめよう')
+  })
+
+  it('検出種別が期待種別に含まれるのに不正解（はらい）は方向ミスのメッセージを返す', () => {
+    const results = [makeResult(0, false, 'harai', ['harai'])]
+    expect(buildStrokeFeedback(results)).toBe('1かくめ：はらうむきをたしかめよう')
+  })
+
+  it('検出種別が期待種別に含まれるのに不正解（とめ）は汎用メッセージを返す', () => {
+    const results = [makeResult(0, false, 'tome', ['tome'])]
+    expect(buildStrokeFeedback(results)).toBe('1かくめ：かきかたをたしかめよう')
+  })
+
+  it('検出不能（null）かつ期待種別あり: 期待種別とヒントを返す', () => {
+    const results = [makeResult(0, false, null, ['tome'])]
+    expect(buildStrokeFeedback(results)).toBe(
+      '1かくめ：さいごは「とめ」！ピタッととめよう',
+    )
+  })
+
+  it('検出不能（null）かつ期待種別なし: 汎用メッセージを返す', () => {
+    const results = [makeResult(0, false, null)]
+    expect(buildStrokeFeedback(results)).toBe('1かくめ：かきかたをたしかめよう')
   })
 
   it('複数の不正解を改行で結合して返す', () => {
     const results = [
-      makeResult(0, false, 'tome'),
-      makeResult(1, true, 'harai'),
-      makeResult(2, false, 'hane'),
-    ]
-    expect(buildStrokeFeedback(results)).toBe(
-      '1かくめ：とめになっています\n3かくめ：はねになっています',
-    )
-  })
-
-  it('detectedEnding が null の不正解はフォールバックメッセージを返す', () => {
-    const results = [makeResult(0, false, null), makeResult(1, false, 'tome')]
-    expect(buildStrokeFeedback(results)).toBe(
-      '1かくめ：かき方を確かめよう\n2かくめ：とめになっています',
-    )
-  })
-
-  it('全画 detectedEnding が null の場合もフォールバックメッセージを返す', () => {
-    const results = [makeResult(0, false, null), makeResult(1, false, null)]
-    expect(buildStrokeFeedback(results)).toBe(
-      '1かくめ：かき方を確かめよう\n2かくめ：かき方を確かめよう',
-    )
-  })
-
-  it('detectedEnding が null かつ expectedEndings あればそれを使ったフォールバックを返す', () => {
-    const results = [makeResult(0, false, null, ['tome'])]
-    expect(buildStrokeFeedback(results)).toBe('1かくめ：とめを確かめよう')
-  })
-
-  it('expectedEndings がある場合は「ではなく〇〇にしましょう」形式を返す', () => {
-    const results = [makeResult(0, false, 'harai', ['tome'])]
-    expect(buildStrokeFeedback(results)).toBe('1かくめ：はらいではなくとめにしましょう')
-  })
-
-  it('expectedEndings が複数ある場合は最初の1つを使う', () => {
-    const results = [makeResult(0, false, 'hane', ['tome', 'harai'])]
-    expect(buildStrokeFeedback(results)).toBe('1かくめ：はねではなくとめにしましょう')
-  })
-
-  it('expectedEndings が空の場合は「になっています」フォールバックを返す', () => {
-    const results = [makeResult(0, false, 'tome', [])]
-    expect(buildStrokeFeedback(results)).toBe('1かくめ：とめになっています')
-  })
-
-  it('複数不正解で expectedEndings あり・なし混在を処理する', () => {
-    const results = [
       makeResult(0, false, 'harai', ['tome']),
       makeResult(1, true, 'tome'),
-      makeResult(2, false, 'hane', []),
+      makeResult(2, false, 'hane', ['hane']),
     ]
     expect(buildStrokeFeedback(results)).toBe(
-      '1かくめ：はらいではなくとめにしましょう\n3かくめ：はねになっています',
+      '1かくめ：はらいではなく「とめ」！さいごはピタッととめよう\n' +
+        '2かくめ：はねるむきをたしかめよう'.replace('2かくめ', '3かくめ'),
     )
   })
 
-  it('detectedEnding が expectedEndings に含まれる場合はスキップする（X ではなく X は表示しない）', () => {
-    const results = [makeResult(0, false, 'hane', ['hane'])]
-    expect(buildStrokeFeedback(results)).toBeNull()
-  })
-
-  it('detectedEnding が expectedEndings の一部に含まれる場合のみスキップする', () => {
-    const results = [
-      makeResult(0, false, 'hane', ['hane', 'tome']),
-      makeResult(1, false, 'harai', ['hane', 'tome']),
-    ]
-    expect(buildStrokeFeedback(results)).toBe('2かくめ：はらいではなくはねにしましょう')
+  it('不正解ならどのパターンでも必ず何らかのメッセージを返す（#14）', () => {
+    const detecteds: (EndingType | null)[] = [null, 'tome', 'hane', 'harai']
+    const expectedsList: EndingType[][] = [[], ['tome'], ['hane'], ['harai'], ['tome', 'hane']]
+    for (const d of detecteds) {
+      for (const e of expectedsList) {
+        const feedback = buildStrokeFeedback([makeResult(0, false, d, e)])
+        expect(feedback, `detected=${d} expected=${e.join(',')}`).not.toBeNull()
+      }
+    }
   })
 })
