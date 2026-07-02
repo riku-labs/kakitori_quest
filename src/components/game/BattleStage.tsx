@@ -1,10 +1,11 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { resolveBattle } from '../../logic/battleLogic'
 import { buildStrokeFeedback } from '../../logic/strokeFeedback'
 import { EnemyDisplay } from './EnemyDisplay'
 import { HeroDisplay } from './HeroDisplay'
 import { MessageWindow } from './MessageWindow'
+import { MistakeStrokesDisplay } from './MistakeStrokesDisplay'
 import { useGameStore } from '../../store/gameStore'
 import { useWardrobeStore } from '../../store/wardrobeStore'
 import { MSG } from '../../config/messages'
@@ -29,6 +30,10 @@ export function BattleStage() {
   const char = currentEntry?.word[currentCharIndex] ?? ''
   const word = currentEntry?.word ?? ''
   const strokeFeedback = buildStrokeFeedback(currentTurnResults)
+  const mistakeStrokeIndexes = useMemo(
+    () => currentTurnResults.filter((r) => !r.isCorrect).map((r) => r.strokeIndex),
+    [currentTurnResults],
+  )
 
   // 敵HP: feedback/won フェーズ中は「この文字クリア後」の値を先取りして表示
   const isResolved =
@@ -114,14 +119,22 @@ export function BattleStage() {
         <HeroDisplay />
       </div>
 
-      <MessageWindow
-        message={battleMessage}
-        detail={
-          battlePhase === 'battling' || battlePhase === 'feedback'
-            ? strokeFeedback ?? undefined
-            : undefined
-        }
-      />
+      <div style={{ display: 'flex', gap: '8px', alignItems: 'stretch' }}>
+        {(battlePhase === 'battling' || battlePhase === 'feedback') &&
+          strokeFeedback !== null && (
+            <MistakeStrokesDisplay char={char} mistakeStrokeIndexes={mistakeStrokeIndexes} />
+          )}
+        <div style={{ flex: 1 }}>
+          <MessageWindow
+            message={battleMessage}
+            detail={
+              battlePhase === 'battling' || battlePhase === 'feedback'
+                ? strokeFeedback ?? undefined
+                : undefined
+            }
+          />
+        </div>
+      </div>
 
       {battlePhase === 'writing' && potionCount > 0 && hearts < 3 && (
         <button

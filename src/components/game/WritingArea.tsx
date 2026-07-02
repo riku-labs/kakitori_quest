@@ -81,7 +81,6 @@ export function WritingArea({
       const rect = wrapperRef.current!.getBoundingClientRect()
       const containerSize = Math.min(rect.width, rect.height)
       const size = Math.min(containerSize, maxSize)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const override = STROKE_ENDING_OVERRIDES[char]
       if (override) charInstance.setStrokeEndings(override)
 
