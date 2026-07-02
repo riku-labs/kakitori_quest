@@ -16,7 +16,7 @@ export function BattleStage() {
     hearts,
     battlePhase,
     battleResult,
-    endingResults,
+    currentTurnResults,
     battleMessage,
     creatureName,
     setBattleFeedback,
@@ -28,7 +28,7 @@ export function BattleStage() {
 
   const char = currentEntry?.word[currentCharIndex] ?? ''
   const word = currentEntry?.word ?? ''
-  const strokeFeedback = buildStrokeFeedback(endingResults)
+  const strokeFeedback = buildStrokeFeedback(currentTurnResults)
 
   // 敵HP: feedback/won フェーズ中は「この文字クリア後」の値を先取りして表示
   const isResolved =
@@ -40,7 +40,8 @@ export function BattleStage() {
   useEffect(() => {
     if (battlePhase !== 'battling') return
 
-    const result = resolveBattle(endingResults)
+    // 戦闘判定はこのターン（この文字）の結果のみで行う
+    const result = resolveBattle(currentTurnResults)
     const timer = setTimeout(() => {
       if (result === 'win') {
         setBattleFeedback('win', MSG.attackSuccess(hearts))
@@ -50,7 +51,7 @@ export function BattleStage() {
     }, 1500)
 
     return () => clearTimeout(timer)
-  }, [battlePhase, char, endingResults, setBattleFeedback])
+  }, [battlePhase, char, currentTurnResults, setBattleFeedback])
 
   return (
     <div
