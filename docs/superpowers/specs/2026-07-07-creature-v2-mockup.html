@@ -1,0 +1,1044 @@
+<title>クリーチャー「ちょい悪」化プレビュー</title>
+<style>
+  :root {
+    --bg: #0c0716;
+    --card: #171028;
+    --line: #35275a;
+    --text: #ece6fa;
+    --dim: #a99ecf;
+    --gold: #f5c542;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+    margin: 0;
+    padding: 28px 20px 64px;
+    line-height: 1.7;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+  header { border: 3px solid var(--line); padding: 18px 22px; margin-bottom: 28px; }
+  h1 {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 1.25rem; letter-spacing: 0.12em; margin: 0 0 6px;
+    color: var(--gold); text-wrap: balance;
+  }
+  header p { margin: 0; color: var(--dim); font-size: 0.85rem; }
+  .notes {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; padding: 0; list-style: none;
+  }
+  .notes li {
+    font-size: 0.75rem; color: var(--text);
+    border: 1px solid var(--line); padding: 3px 10px; border-radius: 2px;
+    font-family: ui-monospace, Menlo, monospace;
+  }
+  section { margin-bottom: 36px; }
+  h2 {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.95rem; letter-spacing: 0.1em; margin: 0 0 4px;
+  }
+  h2 .en { color: var(--dim); font-size: 0.75rem; margin-left: 10px; letter-spacing: 0.05em; }
+  .name-sample { color: var(--dim); font-size: 0.78rem; margin: 0 0 12px; }
+  .cards { display: flex; flex-wrap: wrap; gap: 14px; }
+  .card {
+    background: var(--card); border: 2px solid var(--line);
+    padding: 12px 14px 10px;
+  }
+  .pair { display: flex; gap: 10px; }
+  figure { margin: 0; text-align: center; }
+  figure svg { display: block; background: #0a0014; border: 1px solid var(--line); }
+  figcaption {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.68rem; letter-spacing: 0.14em; margin-top: 6px; color: var(--dim);
+  }
+  figure.after figcaption { color: var(--gold); }
+  .dna {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.62rem; color: var(--dim); margin-top: 8px; text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+</style>
+<div class="wrap">
+  <header>
+    <h1>クリーチャー「ちょい悪」化プレビュー</h1>
+    <p>Issue #6 — 上段: <strong style="color:var(--gold)">v2 パーツ合成＋一筆シルエット方式</strong>（スライム・けもので品質検証。生成は完全に DNA 駆動の機械処理）。下段: 参考として旧「ちょい悪」比較案。</p>
+    <ul class="notes">
+      <li>怒り眉（つり目化）</li>
+      <li>ギザギザ歯のにやり口</li>
+      <li>全形状に暗色の縁取り</li>
+      <li>ツノ・爪・牙を追加</li>
+      <li>足元に影</li>
+      <li>ハイライト縮小</li>
+    </ul>
+  </header>
+  <div id="v2app"></div>
+  <hr style="border:none;border-top:2px solid var(--line);margin:40px 0">
+  <p style="color:var(--dim);font-size:0.8rem">▼ 以下は参考: 旧プレビュー（現行 vs ちょい悪ディテール案）</p>
+  <div id="app"></div>
+</div>
+<script>
+const f = (n) => n.toFixed(1)
+const wrap = (parts) =>
+  `<svg width="132" height="132" viewBox="0 0 120 120">${parts.join('')}</svg>`
+
+function colors(hue) {
+  return {
+    main: `hsl(${hue},72%,52%)`,
+    dark: `hsl(${hue},72%,32%)`,
+    light: `hsl(${hue},72%,72%)`,
+    accent: `hsl(${(hue + 180) % 360},80%,60%)`,
+    outline: `hsl(${hue},70%,18%)`,
+  }
+}
+
+function spikePolygon(cx, cy, rx, ry, n, sym, fill, stroke, sw = 1) {
+  let pts = ''
+  for (let i = 0; i < n * 2; i++) {
+    const a = (i / (n * 2)) * Math.PI * 2 - Math.PI / 2
+    const outer = i % 2 === 0
+    const s = outer ? 1.2 : 0.78
+    const xs = sym < 0.5 && Math.cos(a) < 0 ? 0.65 : 1.0
+    pts += `${f(cx + Math.cos(a) * rx * s * xs)},${f(cy + Math.sin(a) * ry * s)} `
+  }
+  return `<polygon points="${pts.trim()}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>`
+}
+
+// ── ちょい悪ヘルパー ──
+function shadow(cx, cy, rx) {
+  return `<ellipse cx="${f(cx)}" cy="${f(cy)}" rx="${f(rx)}" ry="${f(rx * 0.2)}" fill="#000" opacity="0.3"/>`
+}
+// 内側が下がる怒り眉（left: 右下がり / right: 左下がり）
+function angryBrows(lx, rx, y, w, color, sw) {
+  return (
+    `<line x1="${f(lx - w)}" y1="${f(y - w * 0.55)}" x2="${f(lx + w)}" y2="${f(y + w * 0.35)}" stroke="${color}" stroke-width="${f(sw)}" stroke-linecap="round"/>` +
+    `<line x1="${f(rx - w)}" y1="${f(y + w * 0.35)}" x2="${f(rx + w)}" y2="${f(y - w * 0.55)}" stroke="${color}" stroke-width="${f(sw)}" stroke-linecap="round"/>`
+  )
+}
+// にやり口＋白いギザ歯
+function grinMouth(cx, cy, w, teeth, dark, outline) {
+  const h = w * 0.42
+  const left = cx - w / 2, right = cx + w / 2
+  const mouth = `<path d="M${f(left)},${f(cy)} Q${f(cx)},${f(cy + h)} ${f(right)},${f(cy)} Z" fill="${dark}" stroke="${outline}" stroke-width="1.4"/>`
+  const tw = w / teeth
+  let pts = `${f(left)},${f(cy)} `
+  for (let i = 0; i < teeth; i++) {
+    // 口のカーブに沿って歯の深さを変える（中央ほど深い）
+    const tipX = left + (i + 0.5) * tw
+    const u = (tipX - cx) / (w / 2)
+    const depth = h * 0.62 * (1 - u * u * 0.55)
+    pts += `${f(tipX)},${f(cy + depth)} ${f(left + (i + 1) * tw)},${f(cy)} `
+  }
+  return mouth + `<polygon points="${pts.trim()}" fill="white"/>`
+}
+function horns(cx, topY, spread, hh, fill, outline) {
+  const s = spread
+  return (
+    `<polygon points="${f(cx - s)},${f(topY + 2)} ${f(cx - s - hh * 0.55)},${f(topY - hh)} ${f(cx - s + 4)},${f(topY + 3)}" fill="${fill}" stroke="${outline}" stroke-width="1.2"/>` +
+    `<polygon points="${f(cx + s)},${f(topY + 2)} ${f(cx + s + hh * 0.55)},${f(topY - hh)} ${f(cx + s - 4)},${f(topY + 3)}" fill="${fill}" stroke="${outline}" stroke-width="1.2"/>`
+  )
+}
+function claws(x, y, dir, len, color) {
+  let out = ''
+  for (let i = -1; i <= 1; i++) {
+    out += `<line x1="${f(x)}" y1="${f(y)}" x2="${f(x + dir * len)}" y2="${f(y + len * 0.5 + i * len * 0.55)}" stroke="${color}" stroke-width="2" stroke-linecap="round"/>`
+  }
+  return out
+}
+
+// ══════════ 種族 0: 二足歩行 ══════════
+function generateBiped(dna, evil) {
+  const { strokeCount: sc, hRatio, curvature, symmetry, hue } = dna
+  const c = colors(hue)
+  const scale = Math.min(0.65 + sc * 0.015, 0.95)
+  const cx = 60, bodyCy = 70
+  const bw = (11 + hRatio * 26) * scale
+  const bh = (13 + (1 - hRatio) * 16 + sc * 0.55) * scale
+  const hr = (9 + sc * 0.52) * scale
+  const hy = bodyCy - bh - hr * 0.55
+  const er = (2.2 + curvature * 2.8) * scale
+  const esp = hr * 0.48
+  const pairs = sc <= 4 ? 1 : sc <= 9 ? 2 : 3
+  const parts = []
+  const bodyStroke = evil ? ` stroke="${c.outline}" stroke-width="2"` : ''
+  const ll = (11 + sc * 0.4) * scale
+  const ly = bodyCy + bh
+
+  if (evil) parts.push(shadow(cx, ly + ll + 3, bw * 1.2))
+
+  if (curvature > 0.55)
+    parts.push(spikePolygon(cx, bodyCy, bw, bh, Math.round(4 + sc * 0.35), symmetry, c.main, evil ? c.outline : c.dark, evil ? 2 : 1))
+  else if (curvature < 0.18)
+    parts.push(`<rect x="${f(cx - bw)}" y="${f(bodyCy - bh)}" width="${f(bw * 2)}" height="${f(bh * 2)}" rx="${f(3 * scale)}" fill="${c.main}"${bodyStroke}/>`)
+  else
+    parts.push(`<ellipse cx="${cx}" cy="${f(bodyCy)}" rx="${f(bw)}" ry="${f(bh)}" fill="${c.main}"${bodyStroke}/>`)
+
+  for (let p = 0; p < pairs; p++) {
+    const ay = bodyCy - bh * (0.72 - p * 0.42)
+    const al = (10 + sc * 0.85) * scale
+    const lm = symmetry < 0.5 ? 0.65 : 1.0
+    const sw = `stroke="${c.dark}" stroke-width="${f(4.5 * scale)}" fill="none" stroke-linecap="round"`
+    if (curvature > 0.32) {
+      parts.push(`<path d="M${f(cx - bw)},${f(ay)} Q${f(cx - bw - al * 0.4)},${f(ay - curvature * 14)} ${f(cx - bw - al * lm)},${f(ay + al * 0.35)}" ${sw}/>`)
+      parts.push(`<path d="M${f(cx + bw)},${f(ay)} Q${f(cx + bw + al * 0.4)},${f(ay - curvature * 14)} ${f(cx + bw + al)},${f(ay + al * 0.35)}" ${sw}/>`)
+      if (evil && p === 0) {
+        parts.push(claws(cx - bw - al * lm, ay + al * 0.35, -1, 5 * scale, c.outline))
+        parts.push(claws(cx + bw + al, ay + al * 0.35, 1, 5 * scale, c.outline))
+      }
+    } else {
+      parts.push(`<line x1="${f(cx - bw)}" y1="${f(ay)}" x2="${f(cx - bw - al * lm)}" y2="${f(ay + al * 0.4)}" ${sw}/>`)
+      parts.push(`<line x1="${f(cx + bw)}" y1="${f(ay)}" x2="${f(cx + bw + al)}" y2="${f(ay + al * 0.4)}" ${sw}/>`)
+      if (evil && p === 0) {
+        parts.push(claws(cx - bw - al * lm, ay + al * 0.4, -1, 5 * scale, c.outline))
+        parts.push(claws(cx + bw + al, ay + al * 0.4, 1, 5 * scale, c.outline))
+      }
+    }
+  }
+
+  const lsw = `stroke="${c.dark}" stroke-width="${f(5 * scale)}" stroke-linecap="round"`
+  parts.push(`<line x1="${f(cx - bw * 0.5)}" y1="${f(ly)}" x2="${f(cx - bw * 0.4)}" y2="${f(ly + ll)}" ${lsw}/>`)
+  parts.push(`<line x1="${f(cx + bw * 0.5)}" y1="${f(ly)}" x2="${f(cx + bw * 0.4)}" y2="${f(ly + ll)}" ${lsw}/>`)
+
+  parts.push(`<circle cx="${cx}" cy="${f(hy)}" r="${f(hr)}" fill="${c.light}"${bodyStroke}/>`)
+  if (evil) parts.push(horns(cx, hy - hr, hr * 0.55, 7 * scale + symmetry * 5, c.dark, c.outline))
+
+  const lEx = cx - esp * (symmetry < 0.5 ? 1.4 : 1.0)
+  const lEy = hy + (symmetry < 0.4 ? -hr * 0.12 : 0)
+  parts.push(`<circle cx="${f(lEx)}" cy="${f(lEy)}" r="${f(er)}" fill="${evil ? c.outline : c.dark}"/>`)
+  parts.push(`<circle cx="${f(cx + esp)}" cy="${f(hy)}" r="${f(er)}" fill="${evil ? c.outline : c.dark}"/>`)
+  if (evil) {
+    parts.push(`<circle cx="${f(lEx + er * 0.3)}" cy="${f(lEy - er * 0.3)}" r="${f(er * 0.2)}" fill="white" opacity="0.55"/>`)
+    parts.push(`<circle cx="${f(cx + esp + er * 0.3)}" cy="${f(hy - er * 0.3)}" r="${f(er * 0.2)}" fill="white" opacity="0.55"/>`)
+    parts.push(angryBrows(lEx, cx + esp, hy - er * 1.7, er * 1.15, c.outline, 2.4 * scale))
+    parts.push(grinMouth(cx, hy + hr * 0.42, hr * 1.15, Math.min(3 + Math.floor(sc / 4), 6), c.outline, c.outline))
+  } else {
+    parts.push(`<circle cx="${f(lEx + er * 0.28)}" cy="${f(lEy - er * 0.28)}" r="${f(er * 0.38)}" fill="white" opacity="0.8"/>`)
+    parts.push(`<circle cx="${f(cx + esp + er * 0.28)}" cy="${f(hy - er * 0.28)}" r="${f(er * 0.38)}" fill="white" opacity="0.8"/>`)
+    if (symmetry > 0.7) {
+      const hh = (5 + symmetry * 7) * scale
+      parts.push(`<polygon points="${f(cx)},${f(hy - hr - hh)} ${f(cx - 3.5 * scale)},${f(hy - hr + 1)} ${f(cx + 3.5 * scale)},${f(hy - hr + 1)}" fill="${c.dark}" opacity="0.9"/>`)
+    }
+  }
+  if (symmetry < 0.5) {
+    const tx = cx + bw * 0.4, ty = bodyCy + bh * 0.4
+    parts.push(`<path d="M${f(tx)},${f(ty)} Q${f(tx + 22 * scale)},${f(ty + 8 * scale)} ${f(tx + 16 * scale)},${f(ty + 26 * scale)}" stroke="${c.dark}" stroke-width="${f(3.8 * scale)}" fill="none" stroke-linecap="round"/>`)
+  }
+  if (sc >= 6) {
+    const dots = Math.min(Math.floor(sc / 3), 4)
+    for (let i = 0; i < dots; i++)
+      parts.push(`<circle cx="${f(cx - (dots - 1) * 5 + i * 10)}" cy="${f(bodyCy)}" r="${f(2.4 * scale)}" fill="${c.accent}" opacity="0.75"/>`)
+  }
+  return wrap(parts)
+}
+
+// ══════════ 種族 1: スライム ══════════
+function generateSlime(dna, evil) {
+  const { strokeCount: sc, hRatio, curvature, symmetry, hue } = dna
+  const c = colors(hue)
+  const scale = Math.min(0.65 + sc * 0.015, 0.95)
+  const cx = 60, cy = 48
+  const rx = (16 + hRatio * 18 + sc * 0.5) * scale
+  const ry = (15 + (1 - hRatio) * 10 + sc * 0.4) * scale
+  const bumps = Math.round(4 + curvature * 6)
+  const parts = []
+
+  if (evil) parts.push(shadow(cx, cy + ry * 1.15 + 9 * scale, rx * 1.05))
+
+  {
+    let pts = ''
+    for (let i = 0; i < bumps * 2; i++) {
+      const a = (i / (bumps * 2)) * Math.PI * 2 - Math.PI / 2
+      const outer = i % 2 === 0
+      const r = outer ? 1.15 : 0.85
+      const xs = symmetry < 0.5 && Math.cos(a) < 0 ? 0.7 : 1.0
+      pts += `${f(cx + Math.cos(a) * rx * r * xs)},${f(cy + Math.sin(a) * ry * r)} `
+    }
+    parts.push(`<polygon points="${pts.trim()}" fill="${c.main}"${evil ? ` stroke="${c.outline}" stroke-width="2"` : ''}/>`)
+  }
+
+  const drips = Math.min(sc, 5)
+  for (let i = 0; i < drips; i++) {
+    const dx = cx - (drips - 1) * 7 + i * 14
+    const dh = (5 + i * 1.5) * scale
+    parts.push(`<ellipse cx="${f(dx)}" cy="${f(cy + ry + dh * 0.5)}" rx="${f(3.5 * scale)}" ry="${f(dh)}" fill="${c.main}"/>`)
+  }
+
+  const eyeR = (5 + curvature * 3) * scale
+  const eyeX = rx * 0.38
+  const eyeY = cy - ry * 0.1
+  parts.push(`<circle cx="${f(cx - eyeX)}" cy="${f(eyeY)}" r="${f(eyeR)}" fill="white"/>`)
+  parts.push(`<circle cx="${f(cx + eyeX)}" cy="${f(eyeY)}" r="${f(eyeR)}" fill="white"/>`)
+  parts.push(`<circle cx="${f(cx - eyeX + 1)}" cy="${f(eyeY + 1)}" r="${f(eyeR * 0.55)}" fill="${evil ? c.outline : c.dark}"/>`)
+  parts.push(`<circle cx="${f(cx + eyeX + 1)}" cy="${f(eyeY + 1)}" r="${f(eyeR * 0.55)}" fill="${evil ? c.outline : c.dark}"/>`)
+  if (evil) {
+    parts.push(angryBrows(cx - eyeX, cx + eyeX, eyeY - eyeR * 1.35, eyeR * 0.95, c.outline, 2.6 * scale))
+    parts.push(grinMouth(cx, eyeY + eyeR * 1.6, rx * 0.95, Math.min(4 + Math.floor(sc / 4), 7), c.outline, c.outline))
+  } else {
+    parts.push(`<circle cx="${f(cx - eyeX + eyeR * 0.3)}" cy="${f(eyeY - eyeR * 0.3)}" r="${f(eyeR * 0.28)}" fill="white" opacity="0.8"/>`)
+    parts.push(`<circle cx="${f(cx + eyeX + eyeR * 0.3)}" cy="${f(eyeY - eyeR * 0.3)}" r="${f(eyeR * 0.28)}" fill="white" opacity="0.8"/>`)
+  }
+
+  if (symmetry > 0.65) {
+    const cr = (6 + symmetry * 5) * scale
+    if (evil)
+      parts.push(`<polygon points="${f(cx - cr)},${f(cy - ry * 1.05)} ${f(cx - cr * 0.45)},${f(cy - ry * 1.05 - cr * 1.3)} ${f(cx)},${f(cy - ry * 1.05)} ${f(cx + cr * 0.45)},${f(cy - ry * 1.05 - cr * 1.3)} ${f(cx + cr)},${f(cy - ry * 1.05)}" fill="${c.light}" stroke="${c.outline}" stroke-width="1.5"/>`)
+    else
+      parts.push(`<circle cx="${f(cx)}" cy="${f(cy - ry - cr * 0.5)}" r="${f(cr)}" fill="${c.light}"/>`)
+  }
+  return wrap(parts)
+}
+
+// ══════════ 種族 2: 触手眼 ══════════
+function generateEyeTentacle(dna, evil) {
+  const { strokeCount: sc, curvature, symmetry, hue } = dna
+  const c = colors(hue)
+  const scale = Math.min(0.65 + sc * 0.015, 0.95)
+  const cx = 60, cy = 55
+  const bodyR = (14 + sc * 0.45) * scale
+  const tentCount = Math.min(3 + Math.round(sc * 0.5), 8)
+  const tentLen = (14 + sc * 0.9) * scale
+  const parts = []
+
+  if (evil) parts.push(shadow(cx, cy + bodyR + tentLen * 0.85, bodyR * 1.3))
+
+  parts.push(`<circle cx="${cx}" cy="${f(cy)}" r="${f(bodyR)}" fill="${c.main}"${evil ? ` stroke="${c.outline}" stroke-width="2"` : ''}/>`)
+
+  for (let i = 0; i < tentCount; i++) {
+    const a = (i / tentCount) * Math.PI * 2 - Math.PI / 2
+    const sx = cx + Math.cos(a) * bodyR, sy = cy + Math.sin(a) * bodyR
+    const lm = symmetry < 0.5 && Math.cos(a) < 0 ? 0.65 : 1.0
+    const ex = cx + Math.cos(a) * (bodyR + tentLen * lm)
+    const ey = cy + Math.sin(a) * (bodyR + tentLen * lm)
+    const cpx = (sx + ex) / 2 - Math.sin(a) * curvature * tentLen * 0.7
+    const cpy = (sy + ey) / 2 + Math.cos(a) * curvature * tentLen * 0.7
+    parts.push(`<path d="M${f(sx)},${f(sy)} Q${f(cpx)},${f(cpy)} ${f(ex)},${f(ey)}" stroke="${c.dark}" stroke-width="${f(4 * scale)}" fill="none" stroke-linecap="round"/>`)
+    if (evil) parts.push(`<circle cx="${f(ex)}" cy="${f(ey)}" r="${f(2.4 * scale)}" fill="${c.outline}"/>`)
+  }
+
+  const eyeR = bodyR * (0.62 + symmetry * 0.08)
+  const irisR = eyeR * 0.65
+  const pupilR = irisR * 0.55
+  parts.push(`<circle cx="${cx}" cy="${f(cy)}" r="${f(eyeR)}" fill="white"/>`)
+  parts.push(`<circle cx="${cx}" cy="${f(cy)}" r="${f(irisR)}" fill="${c.dark}"/>`)
+  if (evil) {
+    // 縦スリット瞳＋上まぶた
+    parts.push(`<ellipse cx="${cx}" cy="${f(cy)}" rx="${f(pupilR * 0.38)}" ry="${f(pupilR * 1.45)}" fill="#000"/>`)
+    parts.push(`<path d="M${f(cx - eyeR)},${f(cy - eyeR * 0.15)} A${f(eyeR)},${f(eyeR)} 0 0 1 ${f(cx + eyeR)},${f(cy - eyeR * 0.15)} L${f(cx + eyeR)},${f(cy - eyeR * 1.05)} L${f(cx - eyeR)},${f(cy - eyeR * 1.05)} Z" fill="${c.main}" stroke="${c.outline}" stroke-width="1.5"/>`)
+    parts.push(angryBrows(cx - eyeR * 0.5, cx + eyeR * 0.5, cy - eyeR * 0.75, eyeR * 0.42, c.outline, 2.6 * scale))
+  } else {
+    parts.push(`<circle cx="${cx}" cy="${f(cy)}" r="${f(pupilR)}" fill="#000"/>`)
+    parts.push(`<circle cx="${f(cx + pupilR * 0.35)}" cy="${f(cy - pupilR * 0.35)}" r="${f(pupilR * 0.3)}" fill="white" opacity="0.8"/>`)
+  }
+  return wrap(parts)
+}
+
+// ══════════ 種族 3: 四足獣 ══════════
+function generateBeast(dna, evil) {
+  const { strokeCount: sc, hRatio, curvature, symmetry, hue } = dna
+  const c = colors(hue)
+  const scale = Math.min(0.65 + sc * 0.015, 0.95)
+  const bx = 52, by = 56
+  const bw = (20 + hRatio * 16) * scale
+  const bh = (11 + (1 - hRatio) * 8 + sc * 0.35) * scale
+  const headR = (10 + sc * 0.35) * scale
+  const legCount = sc >= 10 ? 6 : 4
+  const legLen = (13 + sc * 0.3) * scale
+  const tailLen = symmetry * 26 * scale
+  const parts = []
+  const bodyStroke = evil ? ` stroke="${c.outline}" stroke-width="2"` : ''
+
+  if (evil) parts.push(shadow(bx + headR * 0.3, by + bh + legLen + 3, bw * 1.35))
+
+  parts.push(`<ellipse cx="${f(bx)}" cy="${f(by)}" rx="${f(bw)}" ry="${f(bh)}" fill="${c.main}"${bodyStroke}/>`)
+
+  const hx = bx + bw + headR * 0.55, hy = by - bh * 0.2
+  parts.push(`<circle cx="${f(hx)}" cy="${f(hy)}" r="${f(headR)}" fill="${c.light}"${bodyStroke}/>`)
+
+  const er = (3 + curvature * 2) * scale
+  parts.push(`<circle cx="${f(hx + headR * 0.3)}" cy="${f(hy - headR * 0.15)}" r="${f(er)}" fill="${evil ? c.outline : c.dark}"/>`)
+  if (evil) {
+    parts.push(`<line x1="${f(hx + headR * 0.3 - er * 1.2)}" y1="${f(hy - headR * 0.15 - er * 1.5)}" x2="${f(hx + headR * 0.3 + er * 1.2)}" y2="${f(hy - headR * 0.15 - er * 2.1)}" stroke="${c.outline}" stroke-width="${f(2.4 * scale)}" stroke-linecap="round"/>`)
+    // 口＋牙
+    const mx = hx + headR * 0.55, my = hy + headR * 0.45
+    parts.push(`<line x1="${f(hx)}" y1="${f(my)}" x2="${f(mx + headR * 0.35)}" y2="${f(my)}" stroke="${c.outline}" stroke-width="1.8" stroke-linecap="round"/>`)
+    parts.push(`<polygon points="${f(mx - 2 * scale)},${f(my)} ${f(mx)},${f(my + 5.5 * scale)} ${f(mx + 2 * scale)},${f(my)}" fill="white" stroke="${c.outline}" stroke-width="0.8"/>`)
+    parts.push(`<polygon points="${f(hx + headR * 0.05)},${f(my)} ${f(hx + headR * 0.05 + 2 * scale)},${f(my + 4.5 * scale)} ${f(hx + headR * 0.05 + 4 * scale)},${f(my)}" fill="white" stroke="${c.outline}" stroke-width="0.8"/>`)
+    // 2本ツノ
+    parts.push(`<polygon points="${f(hx - headR * 0.45)},${f(hy - headR * 0.8)} ${f(hx - headR * 0.75)},${f(hy - headR - 8.5 * scale)} ${f(hx - headR * 0.1)},${f(hy - headR * 0.9)}" fill="${c.dark}" stroke="${c.outline}" stroke-width="1.2"/>`)
+    parts.push(`<polygon points="${f(hx + headR * 0.15)},${f(hy - headR * 0.95)} ${f(hx + headR * 0.25)},${f(hy - headR - 9.5 * scale)} ${f(hx + headR * 0.6)},${f(hy - headR * 0.75)}" fill="${c.dark}" stroke="${c.outline}" stroke-width="1.2"/>`)
+  } else {
+    parts.push(`<circle cx="${f(hx + headR * 0.3 + er * 0.3)}" cy="${f(hy - headR * 0.15 - er * 0.3)}" r="${f(er * 0.35)}" fill="white" opacity="0.8"/>`)
+    if (symmetry > 0.6)
+      parts.push(`<polygon points="${f(hx)},${f(hy - headR - 8 * scale)} ${f(hx - 4 * scale)},${f(hy - headR + 2)} ${f(hx + 4 * scale)},${f(hy - headR + 2)}" fill="${c.dark}"/>`)
+  }
+
+  if (tailLen > 4) {
+    const tx = bx - bw
+    parts.push(`<path d="M${f(tx)},${f(by)} Q${f(tx - tailLen * 0.5)},${f(by - tailLen * 0.3)} ${f(tx - tailLen)},${f(by + tailLen * 0.1)}" stroke="${c.dark}" stroke-width="${f(5 * scale)}" fill="none" stroke-linecap="round"/>`)
+    if (evil) {
+      const ex = tx - tailLen, ey = by + tailLen * 0.1
+      parts.push(`<polygon points="${f(ex + 3)},${f(ey - 4.5)} ${f(ex - 5.5)},${f(ey)} ${f(ex + 3)},${f(ey + 4.5)}" fill="${c.dark}" stroke="${c.outline}" stroke-width="1"/>`)
+    }
+  }
+
+  for (let i = 0; i < legCount; i++) {
+    const lx = bx - bw * 0.7 + (i / (legCount - 1)) * bw * 1.4
+    const ex = lx + (i < legCount / 2 ? -2 : 2) * scale
+    const ey = by + bh + legLen
+    if (curvature > 0.3)
+      parts.push(`<path d="M${f(lx)},${f(by + bh)} Q${f(lx)},${f(by + bh + legLen * 0.5)} ${f(ex)},${f(ey)}" stroke="${c.dark}" stroke-width="${f(5 * scale)}" fill="none" stroke-linecap="round"/>`)
+    else
+      parts.push(`<line x1="${f(lx)}" y1="${f(by + bh)}" x2="${f(ex)}" y2="${f(ey)}" stroke="${c.dark}" stroke-width="${f(5 * scale)}" stroke-linecap="round"/>`)
+  }
+  return wrap(parts)
+}
+
+// ══════════ 種族 4: 浮遊体 ══════════
+function generateOrb(dna, evil) {
+  const { strokeCount: sc, hRatio, curvature, symmetry, hue } = dna
+  const c = colors(hue)
+  const scale = Math.min(0.65 + sc * 0.015, 0.95)
+  const cx = 60, cy = 46
+  const orbR = (14 + sc * 0.38) * scale
+  const wingW = (10 + hRatio * 22) * scale
+  const wingH = wingW * (0.5 + curvature * 0.5)
+  const tentCount = Math.min(1 + Math.round(sc / 3), 4)
+  const tentLen = (14 + sc * 0.5) * scale
+  const parts = []
+
+  if (evil) parts.push(shadow(cx, cy + orbR + tentLen + 14, orbR * 1.0))
+
+  parts.push(`<circle cx="${cx}" cy="${f(cy)}" r="${f(orbR + 8 * scale)}" fill="none" stroke="${c.main}" stroke-width="1.5" opacity="0.3" stroke-dasharray="4,3"/>`)
+  parts.push(`<circle cx="${cx}" cy="${f(cy)}" r="${f(orbR + 14 * scale)}" fill="none" stroke="${c.main}" stroke-width="1" opacity="0.15" stroke-dasharray="3,5"/>`)
+
+  const wby = cy - orbR * 0.3
+  const rm = symmetry < 0.5 ? 0.7 : 1.0
+  if (evil) {
+    // コウモリ風ギザ翼
+    const wing = (dir, m) => {
+      const bx0 = cx + dir * orbR
+      const tipX = bx0 + dir * wingW * m
+      const tipY = wby - wingH * m
+      return `<polygon points="${f(bx0)},${f(wby)} ${f(tipX)},${f(tipY)} ${f(bx0 + dir * wingW * 0.66 * m)},${f(wby - wingH * 0.25 * m)} ${f(bx0 + dir * wingW * 0.4 * m)},${f(wby + wingH * 0.05)} " fill="${c.dark}" stroke="${c.outline}" stroke-width="1.5"/>`
+    }
+    parts.push(wing(-1, 1), wing(1, rm))
+  } else {
+    const wb = `stroke="${c.dark}" stroke-width="${f(5 * scale)}" fill="none" stroke-linecap="round"`
+    if (curvature > 0.3) {
+      parts.push(`<path d="M${f(cx - orbR)},${f(wby)} Q${f(cx - orbR - wingW * 0.5)},${f(wby - wingH)} ${f(cx - orbR - wingW)},${f(wby - wingH * 0.3)}" ${wb}/>`)
+      parts.push(`<path d="M${f(cx + orbR)},${f(wby)} Q${f(cx + orbR + wingW * 0.5 * rm)},${f(wby - wingH * rm)} ${f(cx + orbR + wingW * rm)},${f(wby - wingH * 0.3 * rm)}" ${wb}/>`)
+    } else {
+      parts.push(`<line x1="${f(cx - orbR)}" y1="${f(wby)}" x2="${f(cx - orbR - wingW)}" y2="${f(wby - wingH * 0.5)}" ${wb}/>`)
+      parts.push(`<line x1="${f(cx + orbR)}" y1="${f(wby)}" x2="${f(cx + orbR + wingW * rm)}" y2="${f(wby - wingH * 0.5 * rm)}" ${wb}/>`)
+    }
+  }
+
+  parts.push(`<circle cx="${cx}" cy="${f(cy)}" r="${f(orbR)}" fill="${c.main}"${evil ? ` stroke="${c.outline}" stroke-width="2"` : ''}/>`)
+
+  const er = (3 + curvature * 2) * scale
+  const esp = orbR * 0.35
+  parts.push(`<circle cx="${f(cx - esp)}" cy="${f(cy - orbR * 0.05)}" r="${f(er)}" fill="${evil ? c.outline : c.dark}"/>`)
+  parts.push(`<circle cx="${f(cx + esp)}" cy="${f(cy - orbR * 0.05)}" r="${f(er)}" fill="${evil ? c.outline : c.dark}"/>`)
+  if (evil) {
+    parts.push(angryBrows(cx - esp, cx + esp, cy - orbR * 0.05 - er * 1.6, er * 1.0, c.outline, 2.4 * scale))
+    parts.push(grinMouth(cx, cy + orbR * 0.42, orbR * 0.9, Math.min(3 + Math.floor(sc / 4), 5), c.outline, c.outline))
+  } else {
+    parts.push(`<circle cx="${f(cx - esp + er * 0.3)}" cy="${f(cy - orbR * 0.05 - er * 0.3)}" r="${f(er * 0.35)}" fill="white" opacity="0.8"/>`)
+    parts.push(`<circle cx="${f(cx + esp + er * 0.3)}" cy="${f(cy - orbR * 0.05 - er * 0.3)}" r="${f(er * 0.35)}" fill="white" opacity="0.8"/>`)
+  }
+
+  for (let i = 0; i < tentCount; i++) {
+    const tx = cx - ((tentCount - 1) * 8) / 2 + i * 8
+    const cdx = (i - (tentCount - 1) / 2) * curvature * 12
+    parts.push(`<path d="M${f(tx)},${f(cy + orbR)} Q${f(tx + cdx)},${f(cy + orbR + tentLen * 0.5)} ${f(tx + cdx * 0.5)},${f(cy + orbR + tentLen)}" stroke="${c.dark}" stroke-width="${f(3.5 * scale)}" fill="none" stroke-linecap="round"/>`)
+  }
+  return wrap(parts)
+}
+
+// ══════════ レンダリング ══════════
+const SPECIES = [
+  { name: '二足歩行', en: 'Biped', gen: generateBiped, sample: '「やま」マン' },
+  { name: 'スライム', en: 'Slime', gen: generateSlime, sample: '「かわ」ののろい' },
+  { name: '触手眼', en: 'EyeTentacle', gen: generateEyeTentacle, sample: '「ほし」アイ' },
+  { name: '四足獣', en: 'Beast', gen: generateBeast, sample: '「うみ」のけもの' },
+  { name: '浮遊体', en: 'Orb', gen: generateOrb, sample: 'そらとぶ「そら」' },
+]
+
+const VARIANTS = [
+  { strokeCount: 3, hRatio: 0.35, curvature: 0.15, symmetry: 0.8, hue: 10 },
+  { strokeCount: 8, hRatio: 0.6, curvature: 0.5, symmetry: 0.4, hue: 130 },
+  { strokeCount: 14, hRatio: 0.75, curvature: 0.85, symmetry: 0.75, hue: 265 },
+]
+
+const app = document.getElementById('app')
+app.innerHTML = SPECIES.map((sp) => `
+  <section>
+    <h2>${sp.name}<span class="en">${sp.en}</span></h2>
+    <p class="name-sample">名前の例: ${sp.sample}</p>
+    <div class="cards">
+      ${VARIANTS.map((dna) => `
+        <div class="card">
+          <div class="pair">
+            <figure>${sp.gen(dna, false)}<figcaption>現行</figcaption></figure>
+            <figure class="after">${sp.gen(dna, true)}<figcaption>ちょい悪案</figcaption></figure>
+          </div>
+          <div class="dna">画数${dna.strokeCount} / 曲率${dna.curvature} / 対称${dna.symmetry} / hue${dna.hue}</div>
+        </div>
+      `).join('')}
+    </div>
+  </section>
+`).join('')
+</script>
+<script>
+// ═════════════ v2: パーツ合成＋一筆シルエット方式 ═════════════
+let uid = 0
+const wrap2 = (parts) =>
+  `<svg width="150" height="150" viewBox="0 0 120 120">${parts.join('')}</svg>`
+
+function colors2(hue) {
+  return {
+    main: `hsl(${hue},68%,55%)`,
+    belly: `hsl(${hue},60%,76%)`,
+    dark: `hsl(${hue},60%,36%)`,
+    outline: `hsl(${hue},55%,15%)`,
+    accent: `hsl(${(hue + 180) % 360},75%,60%)`,
+  }
+}
+
+// 大きくつややかな目（かわいらしさの核）
+function glossyEye(ex, ey, r, c, angry) {
+  const out = []
+  out.push(`<ellipse cx="${f(ex)}" cy="${f(ey)}" rx="${f(r * 0.85)}" ry="${f(r)}" fill="white" stroke="${c.outline}" stroke-width="1.6"/>`)
+  out.push(`<circle cx="${f(ex)}" cy="${f(ey + r * 0.18)}" r="${f(r * 0.5)}" fill="${c.outline}"/>`)
+  out.push(`<circle cx="${f(ex + r * 0.2)}" cy="${f(ey - r * 0.05)}" r="${f(r * 0.19)}" fill="white"/>`)
+  out.push(`<circle cx="${f(ex - r * 0.14)}" cy="${f(ey + r * 0.36)}" r="${f(r * 0.09)}" fill="white" opacity="0.9"/>`)
+  return out.join('')
+}
+function browPair(lx, rx, y, w, c) {
+  return (
+    `<line x1="${f(lx - w)}" y1="${f(y - w * 0.5)}" x2="${f(lx + w)}" y2="${f(y + w * 0.4)}" stroke="${c.outline}" stroke-width="2.6" stroke-linecap="round"/>` +
+    `<line x1="${f(rx - w)}" y1="${f(y + w * 0.4)}" x2="${f(rx + w)}" y2="${f(y - w * 0.5)}" stroke="${c.outline}" stroke-width="2.6" stroke-linecap="round"/>`
+  )
+}
+
+// ── スライム v2 ──
+// 一筆の玉ねぎ型シルエット。bodyVar: 0=クラシック(先端カール) 1=とろけ(したたり) 2=とげ背
+function slimeV2(dna) {
+  const { strokeCount: sc, hRatio, curvature, symmetry, hue } = dna
+  const c = colors2(hue)
+  const bodyVar = hRatio < 0.45 ? 0 : hRatio < 0.65 ? 1 : 2
+  const eyeVar = symmetry > 0.55 ? 0 : 1 // 0=にこにこ 1=ちょい悪
+  const mouthVar = (sc + Math.round(hRatio * 10)) % 3 // 0=にゃんこ口 1=にやり牙 2=お口ぽかん
+  const cx = 60
+  // 旧・底辺の波数に使っていた変数は「つぶれ具合」に転用（横に潰れる⇄縦に伸びる）
+  const squish = ((sc % 3) - 1) * 0.1
+  const W = (26 + hRatio * 10 + sc * 0.4) * (1 + squish)
+  const H = ((bodyVar === 1 ? 48 : 58) + sc * 0.5) * (1 - squish * 0.8)
+  const byy = 90
+  const top = byy - H
+  const curl = 0.25 + curvature * 0.75
+  const id = 'v2s' + uid++
+  const parts = []
+
+  parts.push(`<ellipse cx="${cx}" cy="${byy + 4}" rx="${f(W * 1.02)}" ry="${f(W * 0.16)}" fill="#000" opacity="0.3"/>`)
+
+  // とげ背（本体の後ろから生やす）
+  if (bodyVar === 2) {
+    for (const [px, py, a] of [[-0.72, 0.42, -38], [-0.5, 0.2, -18], [0.55, 0.22, 20], [0.75, 0.45, 40]]) {
+      const sx = cx + W * px, sy = top + H * py
+      parts.push(`<g transform="rotate(${a} ${f(sx)} ${f(sy)})"><polygon points="${f(sx - 5)},${f(sy + 4)} ${f(sx)},${f(sy - 11)} ${f(sx + 5)},${f(sy + 4)}" fill="${c.dark}" stroke="${c.outline}" stroke-width="1.6" stroke-linejoin="round"/></g>`)
+    }
+  }
+
+  // 一筆シルエット（しずく型: 頂点はカールさせず柔らかく尖らせる）
+  const tipLean = (curl - 0.5) * 10 // curvature で先端の傾き
+  const tipX = cx + tipLean
+  const tipY = top - 4 - curl * 4 // curvature で先端の高さ
+  let d = `M${f(cx - W)},${f(byy - 6)} `
+  d += `C${f(cx - W - 3)},${f(byy - 30)} ${f(cx - W * 0.6)},${f(top + H * 0.3)} ${f(tipX - W * 0.16)},${f(top + 5)} `
+  d += `C${f(tipX - W * 0.05)},${f(tipY + 2)} ${f(tipX)},${f(tipY)} ${f(tipX + W * 0.06)},${f(tipY + 3)} `
+  d += `C${f(tipX + W * 0.18)},${f(top + 6)} ${f(cx + W + 3)},${f(byy - 31)} ${f(cx + W)},${f(byy - 6)} `
+  // 底辺はフラット（角丸で接地）
+  d += `Q${f(cx + W)},${f(byy)} ${f(cx + W - 7)},${f(byy)} `
+  d += `L${f(cx - W + 7)},${f(byy)} `
+  d += `Q${f(cx - W)},${f(byy)} ${f(cx - W)},${f(byy - 6)} Z`
+
+  parts.push(`<defs><clipPath id="${id}"><path d="${d}"/></clipPath></defs>`)
+  parts.push(`<path d="${d}" fill="${c.main}" stroke="${c.outline}" stroke-width="2.6" stroke-linejoin="round"/>`)
+  // 陰影: 下部の暗いバンド＋おなかの明るみ＋頭のツヤ
+  parts.push(`<rect x="0" y="${f(byy - H * 0.26)}" width="120" height="${f(H * 0.26 + 10)}" fill="${c.dark}" opacity="0.35" clip-path="url(#${id})"/>`)
+  parts.push(`<ellipse cx="${f(cx)}" cy="${f(byy - H * 0.3)}" rx="${f(W * 0.55)}" ry="${f(H * 0.22)}" fill="${c.belly}" opacity="0.55" clip-path="url(#${id})"/>`)
+  parts.push(`<ellipse cx="${f(cx - W * 0.42)}" cy="${f(top + H * 0.24)}" rx="${f(W * 0.24)}" ry="${f(H * 0.1)}" transform="rotate(-28 ${f(cx - W * 0.42)} ${f(top + H * 0.24)})" fill="white" opacity="0.45" clip-path="url(#${id})"/>`)
+
+  // とろけ: 接地面から左右にあふれる水たまり
+  if (bodyVar === 1) {
+    parts.push(`<ellipse cx="${f(cx - W - 4)}" cy="${f(byy - 2.6)}" rx="7" ry="3" fill="${c.main}" stroke="${c.outline}" stroke-width="1.6"/>`)
+    parts.push(`<ellipse cx="${f(cx + W + 5)}" cy="${f(byy - 2.4)}" rx="5.5" ry="2.6" fill="${c.main}" stroke="${c.outline}" stroke-width="1.6"/>`)
+    // 頭からのしずく
+    const x = cx - W * 0.3, y = top + H * 0.12
+    parts.push(`<path d="M${f(x)},${f(y)} C${f(x - 3)},${f(y + 4)} ${f(x - 2.8)},${f(y + 8)} ${f(x)},${f(y + 9.5)} C${f(x + 2.8)},${f(y + 8)} ${f(x + 3)},${f(y + 4)} ${f(x)},${f(y)}" fill="${c.main}" stroke="${c.outline}" stroke-width="1.4"/>`)
+  }
+
+  // 顔
+  const eyeR = H * 0.115 + curvature * 1.5
+  const eyeY = top + H * 0.4
+  const eyeX = W * 0.34
+  parts.push(glossyEye(cx - eyeX, eyeY, eyeR, c))
+  parts.push(glossyEye(cx + eyeX, eyeY, eyeR, c))
+  if (eyeVar === 1) parts.push(browPair(cx - eyeX, cx + eyeX, eyeY - eyeR * 1.5, eyeR * 0.95, c))
+
+  const my = eyeY + eyeR * 1.7
+  if (mouthVar === 0) {
+    const mw = eyeX * 0.75
+    parts.push(`<path d="M${f(cx - mw)},${f(my)} Q${f(cx - mw / 2)},${f(my + 4.5)} ${f(cx)},${f(my)} Q${f(cx + mw / 2)},${f(my + 4.5)} ${f(cx + mw)},${f(my)}" fill="none" stroke="${c.outline}" stroke-width="2.2" stroke-linecap="round"/>`)
+  } else if (mouthVar === 1) {
+    const mw = eyeX * 0.95
+    parts.push(`<path d="M${f(cx - mw)},${f(my)} Q${f(cx)},${f(my + mw * 0.75)} ${f(cx + mw)},${f(my)} Z" fill="${c.outline}"/>`)
+    parts.push(`<polygon points="${f(cx - mw * 0.55)},${f(my + 0.5)} ${f(cx - mw * 0.3)},${f(my + 5)} ${f(cx - mw * 0.05)},${f(my + 0.5)}" fill="white"/>`)
+    parts.push(`<polygon points="${f(cx + mw * 0.05)},${f(my + 0.5)} ${f(cx + mw * 0.3)},${f(my + 5)} ${f(cx + mw * 0.55)},${f(my + 0.5)}" fill="white"/>`)
+  } else {
+    parts.push(`<ellipse cx="${f(cx)}" cy="${f(my + 1)}" rx="3" ry="3.6" fill="${c.outline}"/>`)
+  }
+  // ほっぺ（にこにこ目のときだけ）
+  if (eyeVar === 0) {
+    parts.push(`<ellipse cx="${f(cx - eyeX - eyeR * 1.15)}" cy="${f(eyeY + eyeR * 1.1)}" rx="${f(eyeR * 0.7)}" ry="${f(eyeR * 0.42)}" fill="hsl(350,85%,72%)" opacity="0.5"/>`)
+    parts.push(`<ellipse cx="${f(cx + eyeX + eyeR * 1.15)}" cy="${f(eyeY + eyeR * 1.1)}" rx="${f(eyeR * 0.7)}" ry="${f(eyeR * 0.42)}" fill="hsl(350,85%,72%)" opacity="0.5"/>`)
+  }
+  return wrap2(parts)
+}
+
+// ── けもの v2 ──
+// 頭身の大きい獣シルエット。earVar: 0=とがり耳 1=ツノ 2=まる耳 / mane / tailVar: 0=ふさ尻尾 1=とげ尻尾
+function beastV2(dna) {
+  const { strokeCount: sc, hRatio, curvature, symmetry, hue } = dna
+  const c = colors2(hue)
+  const earVar = (sc + Math.round(symmetry * 10)) % 3
+  const mane = curvature > 0.5
+  const tailVar = symmetry > 0.5 ? 0 : 1
+  // DNA で向き・首の傾き・スタンスを変えてポーズ差を出す
+  const faceLeft = (sc + Math.round(hRatio * 10) + Math.round(hue / 30)) % 2 === 0
+  const headTilt = (symmetry - 0.5) * 14
+  const stanceVar = (sc + Math.round(curvature * 10) + Math.round(symmetry * 10)) % 3 // 0=直立 1=座り 2=駆け出し
+  const headR = 14 + sc * 0.28
+  const hx = 78, hy = 42
+  const id = 'v2b' + uid++
+  const parts = []
+
+  parts.push(`<ellipse cx="56" cy="92" rx="38" ry="6" fill="#000" opacity="0.3"/>`)
+
+  // 尻尾（体の後ろ）。座りポーズではお尻の位置に合わせて下げる
+  const tailStartIdx = parts.length
+  if (tailVar === 0) {
+    parts.push(`<path d="M32,58 C22,54 16,46 18,34" fill="none" stroke="${c.main}" stroke-width="7" stroke-linecap="round"/>`)
+    parts.push(`<path d="M32,58 C22,54 16,46 18,34" fill="none" stroke="${c.outline}" stroke-width="9.5" stroke-linecap="round" opacity="0.9" style="paint-order:stroke"/>`)
+    parts.push(`<path d="M32,58 C22,54 16,46 18,34" fill="none" stroke="${c.main}" stroke-width="7" stroke-linecap="round"/>`)
+    parts.push(`<path d="M18,38 C12,32 12,26 17,20 C22,25 23,31 21,36 Z" fill="${c.dark}" stroke="${c.outline}" stroke-width="1.8" stroke-linejoin="round"/>`)
+  } else {
+    parts.push(`<path d="M33,60 C24,56 18,50 16,40" fill="none" stroke="${c.main}" stroke-width="6" stroke-linecap="round"/>`)
+    parts.push(`<polygon points="19,43 10,32 22,35" fill="${c.dark}" stroke="${c.outline}" stroke-width="1.6" stroke-linejoin="round"/>`)
+  }
+  if (stanceVar === 1) {
+    const tailSvg = `<g transform="translate(4,17) rotate(10 30 60)">${parts.slice(tailStartIdx).join('')}</g>`
+    parts.length = tailStartIdx
+    parts.push(tailSvg)
+  }
+
+  // 脚: DNA でスタンスを変えてポーズ差を出す
+  // { x, dx: 足先の前後オフセット, dy: 持ち上げ量 }
+  let farLegs, nearLegs
+  if (stanceVar === 1) {
+    // 座り: 前脚のみ直立。後脚は畳んだもも（本体の後で描く）
+    farLegs = [{ x: 66, dx: 2, dy: 0 }]
+    nearLegs = [{ x: 62, dx: 3, dy: 0 }]
+  } else if (stanceVar === 2) {
+    // 駆け出し: 前後に大きく開く
+    farLegs = [{ x: 42, dx: -8, dy: 0 }, { x: 66, dx: 8, dy: 0 }]
+    nearLegs = [{ x: 38, dx: -14, dy: 0 }, { x: 62, dx: 14, dy: 0 }]
+  } else {
+    farLegs = [{ x: 42, dx: 0, dy: 0 }, { x: 66, dx: 0, dy: 0 }]
+    nearLegs = [{ x: 38, dx: 0, dy: 0 }, { x: 62, dx: 0, dy: 0 }]
+  }
+  const legShape = (x, topY, dx, dy, fill, sw) => {
+    const bx = x + dx, byl = 88 + dy
+    return `<path d="M${x - 5},${topY} L${f(bx - 6)},${f(byl - 3)} Q${f(bx - 6)},${f(byl)} ${f(bx - 2)},${f(byl)} L${f(bx + 4)},${f(byl)} Q${f(bx + 7)},${f(byl)} ${f(bx + 6)},${f(byl - 3)} L${x + 5},${topY} Z" fill="${fill}" stroke="${c.outline}" stroke-width="${sw}" stroke-linejoin="round"/>`
+  }
+  for (const l of farLegs) parts.push(legShape(l.x, 64, l.dx, l.dy - 1, c.dark, 1.8))
+
+  // 胴体（一筆）
+  const bodyLen = 6 + hRatio * 6
+  const d =
+    `M${f(34 - bodyLen * 0.4)},56 ` +
+    `C${f(31 - bodyLen * 0.4)},44 ${f(42 - bodyLen * 0.3)},37 ${f(54)},37 ` +
+    `C64,35 72,38 76,44 ` +
+    `L76,62 C70,72 54,75 ${f(44 - bodyLen * 0.2)},73 ` +
+    `C${f(34 - bodyLen * 0.4)},70 ${f(32 - bodyLen * 0.5)},63 ${f(34 - bodyLen * 0.4)},56 Z`
+  const bodyStartIdx = parts.length
+  parts.push(`<defs><clipPath id="${id}"><path d="${d}"/></clipPath></defs>`)
+  parts.push(`<path d="${d}" fill="${c.main}" stroke="${c.outline}" stroke-width="2.6" stroke-linejoin="round"/>`)
+  parts.push(`<ellipse cx="52" cy="72" rx="17" ry="9" fill="${c.belly}" opacity="0.85" clip-path="url(#${id})"/>`)
+  parts.push(`<rect x="0" y="62" width="120" height="30" fill="${c.dark}" opacity="0.25" clip-path="url(#${id})"/>`)
+  if (stanceVar === 1) {
+    // 座り: 胴体を後ろに傾けてお尻を接地させ、畳んだ後脚（もも＋前向きの足先）を重ねる
+    const bodySvg = `<g transform="rotate(-25 72 64)">${parts.slice(bodyStartIdx).join('')}</g>`
+    parts.length = bodyStartIdx
+    parts.push(bodySvg)
+    parts.push(`<ellipse cx="44" cy="76" rx="12.5" ry="10.5" fill="${c.main}" stroke="${c.outline}" stroke-width="2.4"/>`)
+    parts.push(`<path d="M35,88 Q33,88 33,85.5 Q33,83 37,83 L50,83 Q54,83 54,85.5 Q54,88 50,88 Z" fill="${c.main}" stroke="${c.outline}" stroke-width="2" stroke-linejoin="round"/>`)
+    parts.push(`<line x1="47" y1="88" x2="47" y2="84" stroke="${c.outline}" stroke-width="1.6"/>`)
+  }
+
+  // 近い側の脚
+  for (const l of nearLegs) {
+    parts.push(legShape(l.x, 62, l.dx, l.dy, c.main, 2))
+    parts.push(`<line x1="${f(l.x + l.dx)}" y1="${f(88 + l.dy)}" x2="${f(l.x + l.dx)}" y2="${f(84.5 + l.dy)}" stroke="${c.outline}" stroke-width="1.6"/>`)
+  }
+
+  // ここから先（たてがみ・耳・頭・顔）は最後にまとめて headTilt で傾ける
+  const headStartIdx = parts.length
+
+  // たてがみ（頭の後ろ）
+  if (mane) {
+    for (let i = 0; i < 5; i++) {
+      const a = Math.PI * (0.62 + i * 0.15)
+      const sx = hx + Math.cos(a) * headR * 0.9
+      const sy = hy + Math.sin(a) * headR * 0.9
+      const tx = hx + Math.cos(a) * (headR + 9)
+      const ty = hy + Math.sin(a) * (headR + 9)
+      const wv = 5
+      parts.push(`<polygon points="${f(sx + Math.sin(a) * wv)},${f(sy - Math.cos(a) * wv)} ${f(tx)},${f(ty)} ${f(sx - Math.sin(a) * wv)},${f(sy + Math.cos(a) * wv)}" fill="${c.dark}" stroke="${c.outline}" stroke-width="1.6" stroke-linejoin="round"/>`)
+    }
+  }
+
+  // 耳 / ツノ
+  if (earVar === 0) {
+    parts.push(`<polygon points="66,32 60,16 75,26" fill="${c.main}" stroke="${c.outline}" stroke-width="2" stroke-linejoin="round"/>`)
+    parts.push(`<polygon points="84,25 90,12 95,28" fill="${c.main}" stroke="${c.outline}" stroke-width="2" stroke-linejoin="round"/>`)
+    parts.push(`<polygon points="86.5,24 90,16.5 92.5,25" fill="${c.belly}"/>`)
+  } else if (earVar === 1) {
+    parts.push(`<path d="M68,31 C63,24 63,17 69,11" fill="none" stroke="${c.dark}" stroke-width="5" stroke-linecap="round"/>`)
+    parts.push(`<path d="M88,27 C93,21 95,14 91,7" fill="none" stroke="${c.dark}" stroke-width="5" stroke-linecap="round"/>`)
+  } else {
+    parts.push(`<circle cx="68" cy="27" r="7" fill="${c.main}" stroke="${c.outline}" stroke-width="2"/>`)
+    parts.push(`<circle cx="68" cy="27" r="3.2" fill="${c.belly}"/>`)
+    parts.push(`<circle cx="90" cy="24" r="7" fill="${c.main}" stroke="${c.outline}" stroke-width="2"/>`)
+    parts.push(`<circle cx="90" cy="24" r="3.2" fill="${c.belly}"/>`)
+  }
+
+  // 頭（大きめ頭身）
+  parts.push(`<circle cx="${hx}" cy="${hy}" r="${f(headR)}" fill="${c.main}" stroke="${c.outline}" stroke-width="2.6"/>`)
+  // マズル
+  parts.push(`<rect x="${f(hx + headR * 0.35)}" y="${f(hy + 1)}" width="${f(headR * 0.95)}" height="${f(headR * 0.7)}" rx="${f(headR * 0.3)}" fill="${c.belly}" stroke="${c.outline}" stroke-width="2"/>`)
+  parts.push(`<circle cx="${f(hx + headR * 1.16)}" cy="${f(hy + headR * 0.22)}" r="2.4" fill="${c.outline}"/>`)
+  parts.push(`<line x1="${f(hx + headR * 0.5)}" y1="${f(hy + headR * 0.58)}" x2="${f(hx + headR * 1.05)}" y2="${f(hy + headR * 0.58)}" stroke="${c.outline}" stroke-width="1.8" stroke-linecap="round"/>`)
+  // 牙
+  parts.push(`<polygon points="${f(hx + headR * 0.6)},${f(hy + headR * 0.58)} ${f(hx + headR * 0.72)},${f(hy + headR * 0.95)} ${f(hx + headR * 0.84)},${f(hy + headR * 0.58)}" fill="white" stroke="${c.outline}" stroke-width="1"/>`)
+  // 目＋眉
+  const er = headR * 0.3
+  parts.push(glossyEye(hx + headR * 0.05, hy - headR * 0.25, er, c))
+  parts.push(`<line x1="${f(hx + headR * 0.05 - er)}" y1="${f(hy - headR * 0.25 - er * 1.6)}" x2="${f(hx + headR * 0.05 + er)}" y2="${f(hy - headR * 0.25 - er * 1.15)}" stroke="${c.outline}" stroke-width="2.4" stroke-linecap="round"/>`)
+
+  // 頭まわりを傾け、全体の向きを DNA で反転
+  const head = `<g transform="rotate(${f(headTilt)} ${hx} ${hy})">${parts.slice(headStartIdx).join('')}</g>`
+  const body = parts.slice(0, headStartIdx).join('') + head
+  return `<svg width="150" height="150" viewBox="0 0 120 120">${faceLeft ? `<g transform="translate(120,0) scale(-1,1)">${body}</g>` : body}</svg>`
+}
+
+// ── 二足歩行 v2 ──
+// 大頭身のこびと/ゴブリン。bodyVar: 0=ほっそり 1=洋ナシ 2=がっしり
+function bipedV2(dna) {
+  const { strokeCount: sc, hRatio, curvature, symmetry, hue } = dna
+  const c = colors2(hue)
+  const hR10 = Math.round(hRatio * 10), cu10 = Math.round(curvature * 10), sy10 = Math.round(symmetry * 10)
+  const hornVar = (sc + sy10) % 3 // 0=2本ヅノ 1=1本ヅノ 2=とんがり毛
+  const poseVar = (sc + cu10 + sy10) % 3 // 0=両手下ろし 1=片手上げ 2=ファイティング
+  const mouthVar = (sc + hR10) % 3
+  const angry = symmetry <= 0.55
+  const faceLeft = (sc + hR10 + Math.round(hue / 30)) % 2 === 0
+  const bw = 14 + hRatio * 10
+  const tw = bw * 0.62
+  const r = 19 + sc * 0.3
+  const hy = 35
+  const id = 'v2p' + uid++
+  const parts = []
+
+  parts.push(`<ellipse cx="60" cy="92" rx="${f(bw + 12)}" ry="5" fill="#000" opacity="0.3"/>`)
+
+  // 腕（本体の後ろ・アウトライン二重ストローク）
+  const arm = (d) => {
+    parts.push(`<path d="${d}" fill="none" stroke="${c.outline}" stroke-width="8.5" stroke-linecap="round"/>`)
+    parts.push(`<path d="${d}" fill="none" stroke="${c.main}" stroke-width="5.5" stroke-linecap="round"/>`)
+  }
+  const fist = (x, y) => parts.push(`<circle cx="${f(x)}" cy="${f(y)}" r="4.6" fill="${c.main}" stroke="${c.outline}" stroke-width="2"/>`)
+  const downL = () => { arm(`M${f(60 - tw + 2)},54 C${f(60 - bw - 6)},58 ${f(60 - bw - 8)},66 ${f(60 - bw - 9)},72`); fist(60 - bw - 9, 73) }
+  const downR = () => { arm(`M${f(60 + tw - 2)},54 C${f(60 + bw + 6)},58 ${f(60 + bw + 8)},66 ${f(60 + bw + 9)},72`); fist(60 + bw + 9, 73) }
+  if (poseVar === 0) { downL(); downR() }
+  else if (poseVar === 1) {
+    arm(`M${f(60 - tw + 2)},54 C${f(60 - bw - 8)},50 ${f(60 - bw - 10)},42 ${f(60 - bw - 8)},36`); fist(60 - bw - 8, 35)
+    downR()
+  } else {
+    arm(`M${f(60 - tw + 2)},56 C${f(60 - bw - 6)},56 ${f(60 - bw - 7)},52 ${f(60 - bw - 5)},49`); fist(60 - bw - 5, 47.5)
+    arm(`M${f(60 + tw - 2)},56 C${f(60 + bw + 6)},56 ${f(60 + bw + 7)},52 ${f(60 + bw + 5)},49`); fist(60 + bw + 5, 47.5)
+  }
+
+  // 胴体（一筆・洋ナシ型）
+  const d =
+    `M${f(60 - tw)},50 ` +
+    `C${f(60 - bw - 3)},58 ${f(60 - bw - 1)},72 ${f(60 - bw)},79 ` +
+    `Q${f(60 - bw)},86 ${f(60 - bw + 7)},86 ` +
+    `L${f(60 + bw - 7)},86 ` +
+    `Q${f(60 + bw)},86 ${f(60 + bw)},79 ` +
+    `C${f(60 + bw + 1)},72 ${f(60 + bw + 3)},58 ${f(60 + tw)},50 ` +
+    `Q60,46 ${f(60 - tw)},50 Z`
+  parts.push(`<defs><clipPath id="${id}"><path d="${d}"/></clipPath></defs>`)
+  parts.push(`<path d="${d}" fill="${c.main}" stroke="${c.outline}" stroke-width="2.6" stroke-linejoin="round"/>`)
+  parts.push(`<ellipse cx="60" cy="72" rx="${f(bw * 0.72)}" ry="11" fill="${c.belly}" opacity="0.85" clip-path="url(#${id})"/>`)
+  parts.push(`<rect x="0" y="77" width="120" height="12" fill="${c.dark}" opacity="0.28" clip-path="url(#${id})"/>`)
+
+  // 足
+  for (const sgn of [-1, 1])
+    parts.push(`<ellipse cx="${f(60 + sgn * bw * 0.55)}" cy="88.5" rx="7.5" ry="4" fill="${c.main}" stroke="${c.outline}" stroke-width="2"/>`)
+
+  // 耳（とがり耳・左右）
+  parts.push(`<polygon points="${f(60 - r + 3)},${f(hy - 3)} ${f(60 - r - 8)},${f(hy - 1)} ${f(60 - r + 3)},${f(hy + 4)}" fill="${c.main}" stroke="${c.outline}" stroke-width="1.8" stroke-linejoin="round"/>`)
+  parts.push(`<polygon points="${f(60 + r - 3)},${f(hy - 3)} ${f(60 + r + 8)},${f(hy - 1)} ${f(60 + r - 3)},${f(hy + 4)}" fill="${c.main}" stroke="${c.outline}" stroke-width="1.8" stroke-linejoin="round"/>`)
+
+  // ツノ / 毛（頭の後ろ）
+  if (hornVar === 0) {
+    for (const sgn of [-1, 1])
+      parts.push(`<polygon points="${f(60 + sgn * r * 0.55)},${f(hy - r * 0.75)} ${f(60 + sgn * r * 0.85)},${f(hy - r - 9)} ${f(60 + sgn * r * 0.2)},${f(hy - r * 0.92)}" fill="${c.dark}" stroke="${c.outline}" stroke-width="1.6" stroke-linejoin="round"/>`)
+  } else if (hornVar === 1) {
+    parts.push(`<polygon points="${f(60 - 4.5)},${f(hy - r + 2)} 60,${f(hy - r - 11)} ${f(60 + 4.5)},${f(hy - r + 2)}" fill="${c.dark}" stroke="${c.outline}" stroke-width="1.6" stroke-linejoin="round"/>`)
+  } else {
+    for (const [dx, h] of [[-r * 0.4, 6], [0, 9], [r * 0.4, 6]])
+      parts.push(`<polygon points="${f(60 + dx - 4)},${f(hy - r + 3)} ${f(60 + dx + 1)},${f(hy - r - h)} ${f(60 + dx + 5)},${f(hy - r + 3)}" fill="${c.dark}" stroke="${c.outline}" stroke-width="1.4" stroke-linejoin="round"/>`)
+  }
+
+  // 頭（大頭身）
+  parts.push(`<circle cx="60" cy="${hy}" r="${f(r)}" fill="${c.main}" stroke="${c.outline}" stroke-width="2.6"/>`)
+  parts.push(`<ellipse cx="${f(60 - r * 0.42)}" cy="${f(hy - r * 0.42)}" rx="${f(r * 0.3)}" ry="${f(r * 0.14)}" transform="rotate(-28 ${f(60 - r * 0.42)} ${f(hy - r * 0.42)})" fill="white" opacity="0.4"/>`)
+
+  // 顔
+  const er = r * 0.23
+  const ex = r * 0.38
+  parts.push(glossyEye(60 - ex, hy - 1, er, c))
+  parts.push(glossyEye(60 + ex, hy - 1, er, c))
+  if (angry) parts.push(browPair(60 - ex, 60 + ex, hy - 1 - er * 1.5, er * 0.95, c))
+  const my = hy + r * 0.42
+  if (mouthVar === 0) {
+    const mw = r * 0.42
+    parts.push(`<path d="M${f(60 - mw)},${f(my)} Q60,${f(my + mw * 0.8)} ${f(60 + mw)},${f(my)} Z" fill="${c.outline}"/>`)
+    // 下アゴから上向きの牙（ゴブリン風）
+    parts.push(`<polygon points="${f(60 - mw * 0.7)},${f(my + mw * 0.45)} ${f(60 - mw * 0.5)},${f(my - 2.5)} ${f(60 - mw * 0.3)},${f(my + mw * 0.5)}" fill="white"/>`)
+    parts.push(`<polygon points="${f(60 + mw * 0.3)},${f(my + mw * 0.5)} ${f(60 + mw * 0.5)},${f(my - 2.5)} ${f(60 + mw * 0.7)},${f(my + mw * 0.45)}" fill="white"/>`)
+  } else if (mouthVar === 1) {
+    parts.push(`<path d="M${f(60 - r * 0.3)},${f(my)} Q60,${f(my + 4)} ${f(60 + r * 0.3)},${f(my)}" fill="none" stroke="${c.outline}" stroke-width="2.2" stroke-linecap="round"/>`)
+  } else {
+    parts.push(`<ellipse cx="60" cy="${f(my + 1)}" rx="3" ry="3.6" fill="${c.outline}"/>`)
+  }
+  if (!angry) {
+    parts.push(`<ellipse cx="${f(60 - ex - er * 1.2)}" cy="${f(hy + er * 1.1)}" rx="${f(er * 0.7)}" ry="${f(er * 0.4)}" fill="hsl(350,85%,72%)" opacity="0.5"/>`)
+    parts.push(`<ellipse cx="${f(60 + ex + er * 1.2)}" cy="${f(hy + er * 1.1)}" rx="${f(er * 0.7)}" ry="${f(er * 0.4)}" fill="hsl(350,85%,72%)" opacity="0.5"/>`)
+  }
+
+  const body = parts.join('')
+  return `<svg width="150" height="150" viewBox="0 0 120 120">${faceLeft ? `<g transform="translate(120,0) scale(-1,1)">${body}</g>` : body}</svg>`
+}
+
+// ── 触手眼 v2 ──
+// 浮遊する一つ目。pupilVar: 0=まる瞳 1=縦スリット / lidVar: 0=ぱっちり 1=怒りまぶた 2=にっこり半目
+function eyeTentacleV2(dna) {
+  const { strokeCount: sc, hRatio, curvature, symmetry, hue } = dna
+  const c = colors2(hue)
+  const hR10 = Math.round(hRatio * 10)
+  const pupilVar = symmetry > 0.55 ? 0 : 1
+  const lidVar = (sc + hR10) % 3
+  const tentCount = 4 + (sc % 4)
+  const R = 16 + sc * 0.4
+  const cx = 60, cy = 50 + (curvature - 0.5) * 5 // 浮遊高さも DNA で揺らす
+  const id = 'v2e' + uid++
+  const parts = []
+
+  parts.push(`<ellipse cx="60" cy="95" rx="${f(R * 0.9)}" ry="3.5" fill="#000" opacity="0.22"/>`)
+
+  // 触手（先細りの塗りパス・先端が curvature でカール）
+  const tentLen = 13 + sc * 0.7
+  for (let i = 0; i < tentCount; i++) {
+    const a = (i / tentCount) * Math.PI * 2 + Math.PI / tentCount - Math.PI / 2
+    const dx = Math.cos(a), dy = Math.sin(a)
+    const px = -dy, py = dx
+    const bxp = cx + dx * (R - 2), byp = cy + dy * (R - 2)
+    const curlAmt = (curvature - 0.3) * tentLen * 0.7 * (i % 2 === 0 ? 1 : -1)
+    const exp = cx + dx * (R + tentLen) + px * curlAmt
+    const eyp = cy + dy * (R + tentLen) + py * curlAmt
+    const cxp = cx + dx * (R + tentLen * 0.55) + px * curlAmt * 0.25
+    const cyp = cy + dy * (R + tentLen * 0.55) + py * curlAmt * 0.25
+    const w = 3.4
+    parts.push(`<path d="M${f(bxp - px * w)},${f(byp - py * w)} Q${f(cxp - px * w * 0.5)},${f(cyp - py * w * 0.5)} ${f(exp)},${f(eyp)} Q${f(cxp + px * w * 0.5)},${f(cyp + py * w * 0.5)} ${f(bxp + px * w)},${f(byp + py * w)} Z" fill="${c.main}" stroke="${c.outline}" stroke-width="1.6" stroke-linejoin="round"/>`)
+  }
+
+  // 本体
+  parts.push(`<defs><clipPath id="${id}"><circle cx="${cx}" cy="${f(cy)}" r="${f(R)}"/></clipPath></defs>`)
+  parts.push(`<circle cx="${cx}" cy="${f(cy)}" r="${f(R)}" fill="${c.main}" stroke="${c.outline}" stroke-width="2.6"/>`)
+  parts.push(`<rect x="0" y="${f(cy + R * 0.45)}" width="120" height="${f(R)}" fill="${c.dark}" opacity="0.3" clip-path="url(#${id})"/>`)
+  parts.push(`<ellipse cx="${f(cx - R * 0.42)}" cy="${f(cy - R * 0.45)}" rx="${f(R * 0.26)}" ry="${f(R * 0.12)}" transform="rotate(-30 ${f(cx - R * 0.42)} ${f(cy - R * 0.45)})" fill="white" opacity="0.4"/>`)
+
+  // まつ毛（symmetry 高で追加）
+  if (symmetry > 0.6) {
+    for (const [dx2, len] of [[-0.45, 5], [0, 6.5], [0.45, 5]]) {
+      const lx = cx + R * 0.72 * dx2
+      parts.push(`<line x1="${f(lx)}" y1="${f(cy - R * 0.72)}" x2="${f(lx + dx2 * 4)}" y2="${f(cy - R * 0.72 - len)}" stroke="${c.outline}" stroke-width="2" stroke-linecap="round"/>`)
+    }
+  }
+
+  // 巨大な目（視線も DNA で動かす）
+  const eR = R * 0.7
+  const gx = (hRatio - 0.5) * eR * 0.5
+  const gy = (curvature - 0.5) * eR * 0.35
+  parts.push(`<circle cx="${cx}" cy="${f(cy)}" r="${f(eR)}" fill="white" stroke="${c.outline}" stroke-width="2"/>`)
+  parts.push(`<circle cx="${f(cx + gx)}" cy="${f(cy + gy)}" r="${f(eR * 0.6)}" fill="${c.dark}"/>`)
+  if (pupilVar === 0) {
+    parts.push(`<circle cx="${f(cx + gx)}" cy="${f(cy + gy)}" r="${f(eR * 0.3)}" fill="#000"/>`)
+  } else {
+    parts.push(`<ellipse cx="${f(cx + gx)}" cy="${f(cy + gy)}" rx="${f(eR * 0.13)}" ry="${f(eR * 0.44)}" fill="#000"/>`)
+  }
+  parts.push(`<circle cx="${f(cx + gx + eR * 0.22)}" cy="${f(cy + gy - eR * 0.2)}" r="${f(eR * 0.13)}" fill="white"/>`)
+  parts.push(`<circle cx="${f(cx + gx - eR * 0.14)}" cy="${f(cy + gy + eR * 0.24)}" r="${f(eR * 0.06)}" fill="white" opacity="0.9"/>`)
+
+  // まぶた
+  if (lidVar === 1) {
+    parts.push(`<path d="M${f(cx - eR)},${f(cy - eR * 0.25)} A${f(eR)},${f(eR)} 0 0 1 ${f(cx + eR)},${f(cy - eR * 0.25)} L${f(cx + eR)},${f(cy - eR * 1.1)} L${f(cx - eR)},${f(cy - eR * 1.1)} Z" fill="${c.main}" stroke="${c.outline}" stroke-width="1.8"/>`)
+  } else if (lidVar === 2) {
+    parts.push(`<path d="M${f(cx - eR)},${f(cy + eR * 0.35)} A${f(eR)},${f(eR)} 0 0 0 ${f(cx + eR)},${f(cy + eR * 0.35)} L${f(cx + eR)},${f(cy + eR * 1.1)} L${f(cx - eR)},${f(cy + eR * 1.1)} Z" fill="${c.main}" stroke="${c.outline}" stroke-width="1.8"/>`)
+  }
+  return wrap2(parts)
+}
+
+// ── 浮遊体 v2 ──
+// bodyVar: 0=まんまる玉 1=おばけ 2=ほのお / wingVar: 0=なし 1=コウモリ翼 2=ちび羽
+function orbV2(dna) {
+  const { strokeCount: sc, hRatio, curvature, symmetry, hue } = dna
+  const c = colors2(hue)
+  const hR10 = Math.round(hRatio * 10), cu10 = Math.round(curvature * 10), sy10 = Math.round(symmetry * 10)
+  const bodyVar = (sc + sy10) % 3
+  const wingVar = (hR10 + cu10) % 3
+  const mouthVar = (sc + hR10) % 3
+  const angry = symmetry <= 0.55
+  const faceLeft = (sc + hR10 + Math.round(hue / 30)) % 2 === 0
+  const tilt = (symmetry - 0.5) * 12
+  const R = 15 + sc * 0.35
+  const cx = 60, cy = 46
+  const id = 'v2o' + uid++
+  const parts = []
+
+  parts.push(`<ellipse cx="60" cy="94" rx="${f(R * 0.8)}" ry="3" fill="#000" opacity="0.2"/>`)
+  // オーラ
+  parts.push(`<circle cx="${cx}" cy="${cy}" r="${f(R + 9)}" fill="none" stroke="${c.main}" stroke-width="1.5" opacity="0.3" stroke-dasharray="4,3"/>`)
+  parts.push(`<circle cx="${cx}" cy="${cy}" r="${f(R + 15)}" fill="none" stroke="${c.main}" stroke-width="1" opacity="0.15" stroke-dasharray="3,5"/>`)
+  // きらめき
+  for (const [sx, sy, ss] of [[cx - R - 13, cy - 8, 2.6], [cx + R + 11, cy + 6, 2.2], [cx + 6, cy - R - 13, 2]])
+    parts.push(`<rect x="${f(sx - ss)}" y="${f(sy - ss)}" width="${f(ss * 2)}" height="${f(ss * 2)}" transform="rotate(45 ${f(sx)} ${f(sy)})" fill="${c.accent}" opacity="0.8"/>`)
+
+  // 翼（本体の後ろ）
+  if (wingVar === 1) {
+    for (const sgn of [-1, 1]) {
+      const bx0 = cx + sgn * (R - 2)
+      parts.push(`<polygon points="${f(bx0)},${f(cy - 4)} ${f(bx0 + sgn * (R + 8))},${f(cy - R - 2)} ${f(bx0 + sgn * (R + 2))},${f(cy - 5)} ${f(bx0 + sgn * (R + 10))},${f(cy + 2)} ${f(bx0 + sgn * 4)},${f(cy + 6)}" fill="${c.dark}" stroke="${c.outline}" stroke-width="1.8" stroke-linejoin="round"/>`)
+    }
+  } else if (wingVar === 2) {
+    for (const sgn of [-1, 1])
+      parts.push(`<ellipse cx="${f(cx + sgn * (R + 5))}" cy="${f(cy - 4)}" rx="7" ry="4" transform="rotate(${sgn * -28} ${f(cx + sgn * (R + 5))} ${f(cy - 4)})" fill="${c.belly}" stroke="${c.outline}" stroke-width="1.8"/>`)
+  }
+
+  // 本体シルエット
+  let d
+  if (bodyVar === 1) {
+    // おばけ: ドーム＋ゆらゆらスカート
+    const skirtY = cy + R * 1.05
+    d = `M${f(cx - R)},${f(cy)} A${f(R)},${f(R)} 0 0 1 ${f(cx + R)},${f(cy)} L${f(cx + R * 0.92)},${f(skirtY - 4)} `
+    const n = 4
+    let px = cx + R * 0.92
+    for (let i = 1; i <= n; i++) {
+      const nx = cx + R * 0.92 - (2 * R * 0.92 * i) / n
+      d += `Q${f((px + nx) / 2)},${f(skirtY + (i % 2 === 0 ? 6 : -3))} ${f(nx)},${f(skirtY - 4)} `
+      px = nx
+    }
+    d += 'Z'
+  } else if (bodyVar === 2) {
+    // ほのお: しずく型＋先端の揺らぎ
+    const lean = (curvature - 0.5) * 12
+    d =
+      `M${f(cx - R)},${f(cy + 4)} ` +
+      `C${f(cx - R - 2)},${f(cy - 10)} ${f(cx - R * 0.5)},${f(cy - R * 0.6)} ${f(cx - R * 0.35)},${f(cy - R - 2)} ` +
+      `C${f(cx - R * 0.2)},${f(cy - R - 8)} ${f(cx + lean - 2)},${f(cy - R - 12)} ${f(cx + lean)},${f(cy - R - 16)} ` +
+      `C${f(cx + lean + 4)},${f(cy - R - 8)} ${f(cx + R * 0.4)},${f(cy - R - 4)} ${f(cx + R * 0.5)},${f(cy - R * 0.5)} ` +
+      `C${f(cx + R * 0.9)},${f(cy - R * 0.2)} ${f(cx + R + 2)},${f(cy - 6)} ${f(cx + R)},${f(cy + 4)} ` +
+      `A${f(R)},${f(R * 0.85)} 0 0 1 ${f(cx - R)},${f(cy + 4)} Z`
+  } else {
+    d = null // まんまる玉
+  }
+
+  if (d === null) {
+    parts.push(`<defs><clipPath id="${id}"><circle cx="${cx}" cy="${cy}" r="${f(R)}"/></clipPath></defs>`)
+    parts.push(`<circle cx="${cx}" cy="${cy}" r="${f(R)}" fill="${c.main}" stroke="${c.outline}" stroke-width="2.6"/>`)
+  } else {
+    parts.push(`<defs><clipPath id="${id}"><path d="${d}"/></clipPath></defs>`)
+    parts.push(`<path d="${d}" fill="${c.main}" stroke="${c.outline}" stroke-width="2.6" stroke-linejoin="round"/>`)
+  }
+  parts.push(`<rect x="0" y="${f(cy + R * 0.4)}" width="120" height="${f(R * 1.6)}" fill="${c.dark}" opacity="0.28" clip-path="url(#${id})"/>`)
+  if (bodyVar === 2)
+    parts.push(`<path d="M${f(cx - R * 0.45)},${f(cy + 6)} Q${f(cx - R * 0.45)},${f(cy - R * 0.5)} ${f(cx)},${f(cy - R * 0.95)} Q${f(cx + R * 0.45)},${f(cy - R * 0.5)} ${f(cx + R * 0.45)},${f(cy + 6)} Q${f(cx)},${f(cy + R * 0.6)} ${f(cx - R * 0.45)},${f(cy + 6)} Z" fill="${c.belly}" opacity="0.9"/>`)
+  parts.push(`<ellipse cx="${f(cx - R * 0.4)}" cy="${f(cy - R * 0.42)}" rx="${f(R * 0.26)}" ry="${f(R * 0.12)}" transform="rotate(-30 ${f(cx - R * 0.4)} ${f(cy - R * 0.42)})" fill="white" opacity="0.45"/>`)
+
+  // 顔
+  const er = R * 0.22 + curvature * 1.2
+  const ex = R * 0.36
+  const ey = cy + (bodyVar === 1 ? -2 : 0)
+  parts.push(glossyEye(cx - ex, ey, er, c))
+  parts.push(glossyEye(cx + ex, ey, er, c))
+  if (angry) parts.push(browPair(cx - ex, cx + ex, ey - er * 1.5, er * 0.95, c))
+  const my = ey + er * 1.7
+  if (mouthVar === 0) {
+    const mw = ex * 0.8
+    parts.push(`<path d="M${f(cx - mw)},${f(my)} Q${f(cx)},${f(my + mw * 0.8)} ${f(cx + mw)},${f(my)} Z" fill="${c.outline}"/>`)
+    parts.push(`<polygon points="${f(cx - mw * 0.5)},${f(my + 0.5)} ${f(cx - mw * 0.25)},${f(my + 4.5)} ${f(cx)},${f(my + 0.5)}" fill="white"/>`)
+  } else if (mouthVar === 1) {
+    parts.push(`<path d="M${f(cx - ex * 0.7)},${f(my)} Q${f(cx)},${f(my + 4)} ${f(cx + ex * 0.7)},${f(my)}" fill="none" stroke="${c.outline}" stroke-width="2.2" stroke-linecap="round"/>`)
+  } else {
+    parts.push(`<ellipse cx="${f(cx)}" cy="${f(my + 1)}" rx="2.8" ry="3.4" fill="${c.outline}"/>`)
+  }
+
+  const inner = `<g transform="rotate(${f(tilt)} ${cx} ${cy})">${parts.join('')}</g>`
+  return `<svg width="150" height="150" viewBox="0 0 120 120">${faceLeft ? `<g transform="translate(120,0) scale(-1,1)">${inner}</g>` : inner}</svg>`
+}
+
+// ── レンダリング ──
+const V2_VARIANTS = [
+  { strokeCount: 2, hRatio: 0.3, curvature: 0.2, symmetry: 0.8, hue: 205 },
+  { strokeCount: 5, hRatio: 0.5, curvature: 0.75, symmetry: 0.3, hue: 10 },
+  { strokeCount: 8, hRatio: 0.7, curvature: 0.45, symmetry: 0.7, hue: 130 },
+  { strokeCount: 10, hRatio: 0.4, curvature: 0.9, symmetry: 0.45, hue: 268 },
+  { strokeCount: 13, hRatio: 0.6, curvature: 0.1, symmetry: 0.6, hue: 35 },
+  { strokeCount: 16, hRatio: 0.8, curvature: 0.6, symmetry: 0.2, hue: 320 },
+]
+
+const V2_SPECIES = [
+  { name: 'スライム v2', en: 'Slime — 体3種×つぶれ3種×目2種×口3種・底面フラット', gen: slimeV2 },
+  { name: 'けもの v2', en: 'Beast — 耳/ツノ3種×たてがみ×尻尾2種×スタンス3種（直立/座り/駆け出し）×向き', gen: beastV2 },
+  { name: 'にそくほこう v2', en: 'Biped — 体型3種×ツノ/毛3種×ポーズ3種×口3種×向き', gen: bipedV2 },
+  { name: 'しょくしゅがん v2', en: 'EyeTentacle — 瞳2種×まぶた3種×触手4-7本×視線・浮遊高さ', gen: eyeTentacleV2 },
+  { name: 'ふゆうたい v2', en: 'Orb — 体3種（玉/おばけ/ほのお）×翼3種×口3種×傾き×向き', gen: orbV2 },
+]
+
+document.getElementById('v2app').innerHTML = V2_SPECIES.map((sp) => `
+  <section>
+    <h2 style="color:var(--gold)">${sp.name}<span class="en">${sp.en}</span></h2>
+    <div class="cards">
+      ${V2_VARIANTS.map((dna) => `
+        <div class="card">
+          <div class="pair"><figure class="after">${sp.gen(dna)}</figure></div>
+          <div class="dna">画数${dna.strokeCount} / 横${dna.hRatio} / 曲${dna.curvature} / 対称${dna.symmetry}</div>
+        </div>
+      `).join('')}
+    </div>
+  </section>
+`).join('')
+</script>
