@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { creatureColors } from '../../../logic/creatures/palette'
-import { f, glossyEye, browPair, nextClipId, wrapCreatureSvg } from '../../../logic/creatures/parts'
+import { f, glossyEye, browPair, wrapCreatureSvg } from '../../../logic/creatures/parts'
 
 describe('creatureColors', () => {
   it('hue から5色のパレットを返す', () => {
@@ -29,10 +29,6 @@ describe('parts ヘルパー', () => {
   it('browPair は内側が下がる2本の線を返す', () => {
     const c = creatureColors(0)
     expect((browPair(40, 70, 30, 5, c).match(/<line/g) ?? []).length).toBe(2)
-  })
-
-  it('nextClipId は呼ぶたびに異なる id を返す', () => {
-    expect(nextClipId('s')).not.toBe(nextClipId('s'))
   })
 
   it('wrapCreatureSvg は 120x120 の svg で包み、mirror 指定で反転 g を挟む', () => {

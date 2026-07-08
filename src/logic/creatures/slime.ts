@@ -2,7 +2,7 @@ import type { KanjiDNA } from '../../types/game'
 import { creatureColors } from './palette'
 import { f, glossyEye, browPair, dnaClipId, wrapCreatureSvg, CHEEK_COLOR } from './parts'
 
-// 一筆の玉ねぎ型シルエット。bodyVar: 0=クラシック(先端カール) 1=とろけ(したたり) 2=とげ背
+// 一筆の玉ねぎ型シルエット。bodyVar: 0=クラシック 1=とろけ(したたり) 2=とげ背
 export function generateSlime(dna: KanjiDNA): string {
   const { strokeCount: sc, hRatio, curvature, symmetry, hue } = dna
   const c = creatureColors(hue)

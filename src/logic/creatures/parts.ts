@@ -6,12 +6,6 @@ export const CHEEK_COLOR = 'hsl(350,85%,72%)'
 
 export const f = (n: number): string => n.toFixed(1)
 
-let uid = 0
-/** clipPath 用の一意 id。id は毎回変わるため決定性比較時は正規化すること */
-export function nextClipId(prefix: string): string {
-  return `${prefix}${uid++}`
-}
-
 /**
  * DNA から決定的に導出する clipPath 用 id。
  * 同一 DNA・同一種族なら常に同じ id になるため、generateCreature() の
