@@ -1,6 +1,6 @@
 import type { KanjiDNA } from '../../types/game'
 import { creatureColors } from './palette'
-import { f, glossyEye, nextClipId, wrapCreatureSvg } from './parts'
+import { f, glossyEye, dnaClipId, wrapCreatureSvg } from './parts'
 
 // 頭身の大きい獣シルエット。earVar: 0=とがり耳 1=ツノ 2=まる耳 / mane / tailVar: 0=ふさ尻尾 1=とげ尻尾
 export function generateBeast(dna: KanjiDNA): string {
@@ -15,7 +15,7 @@ export function generateBeast(dna: KanjiDNA): string {
   const stanceVar = (sc + Math.round(curvature * 10) + Math.round(symmetry * 10)) % 3 // 0=直立 1=座り 2=駆け出し
   const headR = 14 + sc * 0.28
   const hx = 78, hy = 42
-  const id = nextClipId('beast')
+  const id = dnaClipId('beast', dna)
   const parts: string[] = []
 
   parts.push(`<ellipse cx="56" cy="92" rx="38" ry="6" fill="#000" opacity="0.3"/>`)

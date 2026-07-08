@@ -1,6 +1,6 @@
 import type { KanjiDNA } from '../../types/game'
 import { creatureColors } from './palette'
-import { f, nextClipId, wrapCreatureSvg, glossyEye, browPair } from './parts'
+import { f, dnaClipId, wrapCreatureSvg, glossyEye, browPair } from './parts'
 
 // 浮遊体。bodyVar: 0=まんまる玉 1=おばけ 2=ほのお / wingVar: 0=なし 1=コウモリ翼 2=ちび羽
 export function generateOrb(dna: KanjiDNA): string {
@@ -15,7 +15,7 @@ export function generateOrb(dna: KanjiDNA): string {
   const tilt = (symmetry - 0.5) * 12
   const R = 15 + sc * 0.35
   const cx = 60, cy = 46
-  const id = nextClipId('orb')
+  const id = dnaClipId('orb', dna)
   const parts: string[] = []
 
   parts.push(`<ellipse cx="60" cy="94" rx="${f(R * 0.8)}" ry="3" fill="#000" opacity="0.2"/>`)

@@ -1,6 +1,6 @@
 import type { KanjiDNA } from '../../types/game'
 import { creatureColors } from './palette'
-import { f, glossyEye, browPair, nextClipId, wrapCreatureSvg, CHEEK_COLOR } from './parts'
+import { f, glossyEye, browPair, dnaClipId, wrapCreatureSvg, CHEEK_COLOR } from './parts'
 
 // 一筆の玉ねぎ型シルエット。bodyVar: 0=クラシック(先端カール) 1=とろけ(したたり) 2=とげ背
 export function generateSlime(dna: KanjiDNA): string {
@@ -17,7 +17,7 @@ export function generateSlime(dna: KanjiDNA): string {
   const byy = 90
   const top = byy - H
   const curl = 0.25 + curvature * 0.75
-  const id = nextClipId('slime')
+  const id = dnaClipId('slime', dna)
   const parts: string[] = []
 
   parts.push(`<ellipse cx="${cx}" cy="${byy + 4}" rx="${f(W * 1.02)}" ry="${f(W * 0.16)}" fill="#000" opacity="0.3"/>`)

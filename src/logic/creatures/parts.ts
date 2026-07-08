@@ -1,5 +1,6 @@
 // 全種族共通の描画パーツ（設計: docs/superpowers/specs/2026-07-07-creature-v2-design.md）
 import type { CreaturePalette } from './palette'
+import type { KanjiDNA } from '../../types/game'
 
 export const CHEEK_COLOR = 'hsl(350,85%,72%)'
 
@@ -9,6 +10,15 @@ let uid = 0
 /** clipPath 用の一意 id。id は毎回変わるため決定性比較時は正規化すること */
 export function nextClipId(prefix: string): string {
   return `${prefix}${uid++}`
+}
+
+/**
+ * DNA から決定的に導出する clipPath 用 id。
+ * 同一 DNA・同一種族なら常に同じ id になるため、generateCreature() の
+ * 出力決定性（同じ入力→同じ SVG 文字列）を壊さない。
+ */
+export function dnaClipId(prefix: string, dna: KanjiDNA): string {
+  return `${prefix}${dna.strokeCount}-${Math.round(dna.hRatio * 100)}-${Math.round(dna.curvature * 100)}-${Math.round(dna.symmetry * 100)}-${Math.round(dna.hue)}`
 }
 
 export function wrapCreatureSvg(inner: string, mirror: boolean): string {

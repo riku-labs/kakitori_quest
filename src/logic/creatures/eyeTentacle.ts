@@ -1,6 +1,6 @@
 import type { KanjiDNA } from '../../types/game'
 import { creatureColors } from './palette'
-import { f, nextClipId, wrapCreatureSvg } from './parts'
+import { f, dnaClipId, wrapCreatureSvg } from './parts'
 
 // 浮遊する一つ目。pupilVar: 0=まる瞳 1=縦スリット / lidVar: 0=ぱっちり 1=怒りまぶた 2=にっこり半目
 export function generateEyeTentacle(dna: KanjiDNA): string {
@@ -12,7 +12,7 @@ export function generateEyeTentacle(dna: KanjiDNA): string {
   const tentCount = 4 + (sc % 4)
   const R = 16 + sc * 0.4
   const cx = 60, cy = 50 + (curvature - 0.5) * 5 // 浮遊高さも DNA で揺らす
-  const id = nextClipId('eye')
+  const id = dnaClipId('eye', dna)
   const parts: string[] = []
 
   parts.push(`<ellipse cx="60" cy="95" rx="${f(R * 0.9)}" ry="3.5" fill="#000" opacity="0.22"/>`)

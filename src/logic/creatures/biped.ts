@@ -1,6 +1,6 @@
 import type { KanjiDNA } from '../../types/game'
 import { creatureColors } from './palette'
-import { f, glossyEye, browPair, nextClipId, wrapCreatureSvg, CHEEK_COLOR } from './parts'
+import { f, glossyEye, browPair, dnaClipId, wrapCreatureSvg, CHEEK_COLOR } from './parts'
 
 // 大頭身のこびと/ゴブリン。bodyVar: 0=ほっそり 1=洋ナシ 2=がっしり
 export function generateBiped(dna: KanjiDNA): string {
@@ -16,7 +16,7 @@ export function generateBiped(dna: KanjiDNA): string {
   const tw = bw * 0.62
   const r = 19 + sc * 0.3
   const hy = 35
-  const id = nextClipId('biped')
+  const id = dnaClipId('biped', dna)
   const parts: string[] = []
 
   parts.push(`<ellipse cx="60" cy="92" rx="${f(bw + 12)}" ry="5" fill="#000" opacity="0.3"/>`)
