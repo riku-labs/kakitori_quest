@@ -21,7 +21,7 @@ export function selectSpecies(dna: KanjiDNA, word: string): number {
 
 const SPECIES_NAME_FN: ((word: string) => string)[] = [
   (word) => `「${word}」マン`,
-  (word) => `「${word}」ののろい`,
+  (word) => `「${word}」スライム`,
   (word) => `「${word}」アイ`,
   (word) => `「${word}」のけもの`,
   (word) => `そらとぶ「${word}」`,

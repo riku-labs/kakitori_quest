@@ -35,8 +35,8 @@ describe('generateCreatureName', () => {
   it('種族0(Biped)は「XXマン」を返す', () => {
     expect(generateCreatureName(0, 'ゆ')).toBe('「ゆ」マン')
   })
-  it('種族1(Slime)は「XXののろい」を返す', () => {
-    expect(generateCreatureName(1, 'ゆ')).toBe('「ゆ」ののろい')
+  it('種族1(Slime)は「XXスライム」を返す', () => {
+    expect(generateCreatureName(1, 'ゆ')).toBe('「ゆ」スライム')
   })
   it('種族2(EyeTentacle)は「XXアイ」を返す', () => {
     expect(generateCreatureName(2, 'ゆ')).toBe('「ゆ」アイ')
